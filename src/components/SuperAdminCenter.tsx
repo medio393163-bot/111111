@@ -6,6 +6,237 @@ import {
   CreditCard, Mail, SlidersHorizontal, Eye, Play, Pause, Trash, ArrowRight, Shield, FileText, Globe
 } from 'lucide-react';
 import { TenantConfig, AppMarketItem, IndustryType } from '../types';
+import EpicBlueprints from './EpicBlueprints';
+
+export type KpiKey = 'gmv' | 'margin' | 'inventoryHealth' | 'retention' | 'risk';
+
+export interface IndustryKpiWeights {
+  gmv: number;
+  margin: number;
+  inventoryHealth: number;
+  retention: number;
+  risk: number;
+}
+
+export interface IndustryKeyTools {
+  coreAgents: string[];     // ['InventoryAgent', 'PricingAgent', ...]
+  coreServices: string[];   // ['InventoryService', 'ProductService', ...]
+  secondaryAgents: string[];
+  secondaryServices: string[];
+}
+
+export interface PlaybookTemplate {
+  id: string;
+  name: string;
+  description: string;
+  // 可以继续扩展比如：适用目标类型、涉及的 Agent 列表等
+}
+
+export interface IndustryStrategyConfig {
+  kpiWeights: IndustryKpiWeights;
+  keyTools: IndustryKeyTools;
+  defaultPlaybooks: PlaybookTemplate[];
+}
+
+export const IndustryStrategies: Record<IndustryType, IndustryStrategyConfig> = {
+  fashion_wholesale: {
+    kpiWeights: {
+      gmv: 0.30,
+      margin: 0.25,
+      inventoryHealth: 0.30,
+      retention: 0.10,
+      risk: 0.05,
+    },
+    keyTools: {
+      coreAgents: ['InventoryAgent', 'PricingAgent', 'OpsCommander'],
+      coreServices: ['InventoryService', 'ProductService', 'PricingService'],
+      secondaryAgents: ['MarketingAgent', 'PaymentAgent'],
+      secondaryServices: ['MarketingService', 'PaymentService'],
+    },
+    defaultPlaybooks: [
+      {
+        id: 'seasonal_clearance',
+        name: '季末清仓计划',
+        description: '针对季节性服装库存，制定分层折扣与清货活动。',
+      },
+      {
+        id: 'size_mix_optimization',
+        name: '尺码结构优化',
+        description: '识别滞销尺码，做混码打包或定向清货。',
+      },
+    ],
+  },
+
+  restaurant_takeout: {
+    kpiWeights: {
+      gmv: 0.25,
+      margin: 0.20,
+      inventoryHealth: 0.10,
+      retention: 0.30,
+      risk: 0.15,
+    },
+    keyTools: {
+      coreAgents: ['PricingAgent', 'MarketingAgent', 'OpsCommander'],
+      coreServices: ['ProductService', 'PricingService', 'MarketingService'],
+      secondaryAgents: ['InventoryAgent', 'PaymentAgent'],
+      secondaryServices: ['InventoryService', 'PaymentService'],
+    },
+    defaultPlaybooks: [
+      {
+        id: 'increase_aov_with_meal_bundles',
+        name: '套餐提升客单价',
+        description: '通过主菜+小食+饮料套餐提高外卖客单价。',
+      },
+      {
+        id: 'improve_repurchase_rate',
+        name: '复购提升计划',
+        description: '针对近期下单客户设计二次下单优惠与唤醒流程。',
+      },
+    ],
+  },
+
+  general_merch_electronics: {
+    kpiWeights: {
+      gmv: 0.25,
+      margin: 0.30,
+      inventoryHealth: 0.20,
+      retention: 0.10,
+      risk: 0.15,
+    },
+    keyTools: {
+      coreAgents: ['PricingAgent', 'InventoryAgent', 'RiskAgent', 'OpsCommander'],
+      coreServices: ['ProductService', 'InventoryService', 'FinanceService'],
+      secondaryAgents: ['MarketingAgent', 'PaymentAgent'],
+      secondaryServices: ['MarketingService', 'PaymentService'],
+    },
+    defaultPlaybooks: [
+      {
+        id: 'high_value_risk_control',
+        name: '高价商品风控方案',
+        description: '针对大额订单识别风险并制定审核策略。',
+      },
+      {
+        id: 'major_sale_pricing',
+        name: '大促定价策略',
+        description: '为大促场景制定安全可控的折扣与利润方案。',
+      },
+    ],
+  },
+
+  beauty_booking: {
+    kpiWeights: {
+      gmv: 0.20,
+      margin: 0.15,
+      inventoryHealth: 0.05,
+      retention: 0.40,
+      risk: 0.20,
+    },
+    keyTools: {
+      coreAgents: ['MarketingAgent', 'OpsCommander'],
+      coreServices: ['CustomerService', 'MarketingService'],
+      secondaryAgents: ['PricingAgent', 'RiskAgent'],
+      secondaryServices: ['PricingService', 'OrderService'],
+    },
+    defaultPlaybooks: [
+      {
+        id: 'treatment_renewal',
+        name: '疗程续费计划',
+        description: '针对即将完成疗程的客户制定续费优惠与提醒。',
+      },
+      {
+        id: 'no_show_reduction',
+        name: '减少爽约计划',
+        description: '通过预约提醒和押金策略降低爽约率。',
+      },
+    ],
+  },
+
+  ecommerce_store: {
+    kpiWeights: {
+      gmv: 0.35,
+      margin: 0.25,
+      inventoryHealth: 0.20,
+      retention: 0.10,
+      risk: 0.10,
+    },
+    keyTools: {
+      coreAgents: ['OpsCommander', 'PricingAgent', 'InventoryAgent', 'PaymentAgent'],
+      coreServices: ['StoreKpiService', 'ProductService', 'InventoryService', 'PaymentService'],
+      secondaryAgents: ['MarketingAgent', 'RiskAgent'],
+      secondaryServices: ['MarketingService', 'OrderService'],
+    },
+    defaultPlaybooks: [
+      {
+        id: 'overall_growth',
+        name: '全店增长计划',
+        description: '围绕流量、转化、客单价、复购四个杠杆制定行动。',
+      },
+      {
+        id: 'bestseller_vs_lowseller',
+        name: '畅销与滞销优化',
+        description: '提升畅销品表现，处理滞销和高库存商品。',
+      },
+    ],
+  },
+
+  pos_retail: {
+    kpiWeights: {
+      gmv: 0.30,
+      margin: 0.25,
+      inventoryHealth: 0.25,
+      retention: 0.10,
+      risk: 0.10,
+    },
+    keyTools: {
+      coreAgents: ['InventoryAgent', 'OpsCommander'],
+      coreServices: ['InventoryService', 'StoreKpiService'],
+      secondaryAgents: ['PricingAgent', 'MarketingAgent'],
+      secondaryServices: ['ProductService', 'MarketingService'],
+    },
+    defaultPlaybooks: [
+      {
+        id: 'store_comparison',
+        name: '门店对比计划',
+        description: '识别不同门店之间的畅销/滞销商品与调拨机会。',
+      },
+      {
+        id: 'store_inventory_turnover',
+        name: '单店库存周转优化',
+        description: '为库存积压门店制定折扣与陈列调整方案。',
+      },
+    ],
+  },
+  retail: {
+    kpiWeights: { gmv: 0.30, margin: 0.25, inventoryHealth: 0.25, retention: 0.10, risk: 0.10 },
+    keyTools: { coreAgents: ['OpsCommander'], coreServices: ['StoreKpiService'], secondaryAgents: [], secondaryServices: [] },
+    defaultPlaybooks: []
+  },
+  food: {
+    kpiWeights: { gmv: 0.30, margin: 0.25, inventoryHealth: 0.25, retention: 0.10, risk: 0.10 },
+    keyTools: { coreAgents: ['OpsCommander'], coreServices: ['StoreKpiService'], secondaryAgents: [], secondaryServices: [] },
+    defaultPlaybooks: []
+  },
+  education: {
+    kpiWeights: { gmv: 0.30, margin: 0.25, inventoryHealth: 0.25, retention: 0.10, risk: 0.10 },
+    keyTools: { coreAgents: ['OpsCommander'], coreServices: ['StoreKpiService'], secondaryAgents: [], secondaryServices: [] },
+    defaultPlaybooks: []
+  },
+  healthcare: {
+    kpiWeights: { gmv: 0.30, margin: 0.25, inventoryHealth: 0.25, retention: 0.10, risk: 0.10 },
+    keyTools: { coreAgents: ['OpsCommander'], coreServices: ['StoreKpiService'], secondaryAgents: [], secondaryServices: [] },
+    defaultPlaybooks: []
+  },
+  service: {
+    kpiWeights: { gmv: 0.30, margin: 0.25, inventoryHealth: 0.25, retention: 0.10, risk: 0.10 },
+    keyTools: { coreAgents: ['OpsCommander'], coreServices: ['StoreKpiService'], secondaryAgents: [], secondaryServices: [] },
+    defaultPlaybooks: []
+  },
+  manufacturing: {
+    kpiWeights: { gmv: 0.30, margin: 0.25, inventoryHealth: 0.25, retention: 0.10, risk: 0.10 },
+    keyTools: { coreAgents: ['OpsCommander'], coreServices: ['StoreKpiService'], secondaryAgents: [], secondaryServices: [] },
+    defaultPlaybooks: []
+  }
+};
 
 interface SuperAdminCenterProps {
   activeSubTab?: 'stats' | 'tenants' | 'billing' | 'settlement' | 'gateways' | 'channels' | 'ai-ops' | 'marketplace' | 'dev' | 'roles' | 'logs' | 'settings';
@@ -19,6 +250,7 @@ interface SuperAdminCenterProps {
   onAddSystemLog: (module: string, action: string, details: string, type: 'info' | 'success' | 'warning' | 'error') => void;
   activeAgents?: any[];
   onUpdateAgents?: (agents: any[]) => void;
+  onChangeSubTab?: (subTab: string) => void;
 }
 
 export default function SuperAdminCenter({
@@ -32,7 +264,8 @@ export default function SuperAdminCenter({
   onChangeGlobalModel,
   onAddSystemLog,
   activeAgents = [],
-  onUpdateAgents
+  onUpdateAgents,
+  onChangeSubTab
 }: SuperAdminCenterProps) {
 
   // Multi-tenant isolation presets
@@ -198,6 +431,817 @@ export default function SuperAdminCenter({
   const [manualTenantId, setManualTenantId] = useState('');
   const [manualPlanType, setManualPlanType] = useState('enterprise');
   const [manualMonths, setManualMonths] = useState(12);
+
+  // 🧠 AI 指挥官 (AI Commander) states
+  const [commanderQuery, setCommanderQuery] = useState('');
+  const [isCommanderExecuting, setIsCommanderExecuting] = useState(false);
+  const [commanderResult, setCommanderResult] = useState<{
+    query: string;
+    description: string;
+    cards: Array<{
+      title: string;
+      icon: string;
+      actionText: string;
+      color: 'rose' | 'amber' | 'indigo' | 'emerald';
+      onAction: () => void;
+    }>;
+  } | null>(null);
+
+  // 🎯 AI Commander OS V2: Multi-Agent & Goal-Driven Simulation Cockpit states
+  const [activePresetCampaign, setActivePresetCampaign] = useState<'none' | 'winter_clearout'>('none');
+  const [cockpitPhase, setCockpitPhase] = useState<'idle' | 'simulating' | 'done'>('idle');
+  const [selectedSimIndustry, setSelectedSimIndustry] = useState<IndustryType>('fashion_wholesale');
+  const [selectedPlaybookId, setSelectedPlaybookId] = useState<string>('seasonal_clearance');
+  
+  // Weights and objectives model conforming to `BusinessGoal` specification
+  const [businessGoal, setBusinessGoal] = useState({
+    timeRange: {
+      preset: 'next_month' as 'next_month' | 'next_quarter',
+      from: '',
+      to: ''
+    },
+    metricsTarget: {
+      gmvChangeRate: 0.30,       // +30%
+      ordersChangeRate: 0.15,    // +15%
+      marginChangeRate: -0.05,   // -5% due to clearance markdowns
+      refundRateMax: 0.03,       // Max 3% refund rate
+      inventoryTurnoverDaysMax: 35 // Max 35 days dev
+    },
+    priorityWeights: {
+      gmv: 30,                   // 30%
+      margin: 25,                // 25%
+      inventoryHealth: 30,       // 30%
+      retention: 10,             // 10%
+      risk: 5                    // 5%
+    }
+  });
+
+  const [uploadedModalFiles, setUploadedModalFiles] = useState<Array<{ name: string; type: string; size: string; content?: string }>>([
+    { name: 'winter_aging_analysis.xlsx', type: 'Spreadsheet', size: '142 KB' },
+    { name: 'switzerland_temperature_anomaly_radar.jpg', type: 'Image Asset', size: '1.2 MB' }
+  ]);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [selectedModalFile, setSelectedModalFile] = useState<string | null>('winter_aging_analysis.xlsx');
+
+  // Multi-department collaborative roundtable dialogues for "Winter Clearout"
+  const [simulationRoundtable, setSimulationRoundtable] = useState<Array<{
+    agent: string;
+    name: string;
+    avatar: string;
+    role: string;
+    opinion: string;
+    tradeoffs: string;
+  }>>([]);
+  
+  const [currentSimulationIndex, setCurrentSimulationIndex] = useState(-1);
+  const [simulationResults, setSimulationResults] = useState<{
+    gameTheoryEquilibrium: number;
+    metricsDelta: {
+      gmv: string;
+      margin: string;
+      turnover: string;
+      risk: string;
+    };
+    propositions: string[];
+    actionType: string;
+  } | null>(null);
+
+  const handleCommanderCommand = (q: string) => {
+    if (!q.trim()) return;
+    setCommanderQuery(q);
+    setIsCommanderExecuting(true);
+    setCommanderResult(null);
+    
+    // Simulate smart business automation decision and latency
+    setTimeout(() => {
+      setIsCommanderExecuting(false);
+      onAddSystemLog('AI Commander', '智能决策执行', `AI指挥官接收全域控制：${q}`, 'success');
+      
+      const normalized = q.toLowerCase();
+      
+      // 1. 分析最近30天订单下降原因
+      if (normalized.includes('下降原因') || normalized.includes('30天订单') || normalized.includes('订单下降')) {
+        setCommanderResult({
+          query: q,
+          description: "📊 【分析报告】近30天全平台多租户订单平均流速下降 12.4% 诊断分析：\n\n① 备货断供（占 38%）：米兰服装大宗爆款及慕尼黑仓储原料达到警戒警戒线下限，造成多次订单强制流失。\n② 投放低效（占 24%）：Summer Sale 精准营销 CPC 成本上涨，局部 ROI 滑落至 0.62 水平。\n③ 物流履约延迟（占 19%）：欧盟保税港口近期清关效率波动，平均妥投延迟 1.5 天，退款纠纷上涨。",
+          cards: [
+            {
+              title: "生成本周智能补货计划",
+              icon: "📦",
+              actionText: "一键排定备货计划并采购",
+              color: 'rose',
+              onAction: () => {
+                const newRule = {
+                  id: `rule_command_${Date.now()}`,
+                  ifCondition: '全网高潜爆款库存 < 20',
+                  thenAction: '物理下达欧洲配给点自动补货50件订单',
+                  active: true,
+                  runs: 1
+                };
+                setRules(prev => [newRule, ...prev]);
+                setAiOpsSubTab('rules');
+                onAddSystemLog('AI Commander', '执行备货链下派', '针对下降原因已下达应急补货采购任务，并入规则注册表', 'success');
+                alert("【AI 指挥动作成功】\n- 已排定备货大区供货渠道！\n- 安全规则已热更部署：若全网高潜爆款库存 < 20，将自动关联采购单。");
+              }
+            },
+            {
+              title: "暂停突发低 ROI 活动 (Summer Sale)",
+              icon: "📉",
+              actionText: "一键挂起低效推广活动",
+              color: 'amber',
+              onAction: () => {
+                onAddSystemLog('AI Commander', '挂起低效活动', '物理阻断 Summer Sale 推广活动，回流预算 $812', 'warning');
+                alert("【AI 指挥动作成功】\n- 已通知推广网关！物理挂起「Summer Sale」营销渠道。\n- $812 闲置预算已提现回滚至商家隔离托管池中。");
+              }
+            },
+            {
+              title: "查看受影响爆款商品列表",
+              icon: "👕",
+              actionText: "查看并优化 WMS 补货队列",
+              color: 'indigo',
+              onAction: () => {
+                setAiOpsSubTab('tasks');
+                alert("已成功为您跳转至「✅ 任务管理」进行全网库存与物料供应配对分析！");
+              }
+            }
+          ]
+        });
+      }
+      // 2. 查找全网库存风险
+      else if (normalized.includes('库存异常') || normalized.includes('库存风险') || normalized.includes('查找全网') || normalized.includes('全网库存异常')) {
+        setCommanderResult({
+          query: q,
+          description: "🩺 【库存筛查】自动扫描 6 大主业租户隔离库房，当前低库存 SKU 累计: 127 个，影响 32 个店铺租户。以下明星大单爆品预计在 3 天内耗尽：\n\n• 服饰大底：Nike Air Max 42码 (当前库存: 3件)\n• 电商高潜：Coffee Bean 1kg (当前库存: 4包)\n• POS零售：iPhone Charger USB-C (当前库存: 1个)",
+          cards: [
+            {
+              title: "一键生成今日紧急补货计划",
+              icon: "⚡",
+              actionText: "生成补货并同步给供货商",
+              color: 'rose',
+              onAction: () => {
+                const newTask = { id: `task_proc_${Date.now()}`, name: '紧急全网供应链补水补货', status: '运行中', successRate: 100, totalRuns: 1 };
+                setAiTasks(prev => [newTask, ...prev]);
+                setAiOpsSubTab('tasks');
+                onAddSystemLog('AI Commander', '补货任务下派', '自动编译紧急商品物料供货任务并下派 WMS 节点', 'success');
+                alert("【AI 指挥动作成功】\n- 已为您快速启动 WMS 一步式自动买方匹配！\n- 采购任务已录入「✅ 任务管理」中心物理待执。");
+              }
+            },
+            {
+              title: "为上述爆品创建安全阻断备货规则",
+              icon: "📏",
+              actionText: "创建采购备货 IF-THEN 规则",
+              color: 'indigo',
+              onAction: () => {
+                const newRule = {
+                  id: `rule_stock_risk_${Date.now()}`,
+                  ifCondition: 'Nike Air Max 42码库存 < 10',
+                  thenAction: '自动向欧洲配给口调度采购补货',
+                  active: true,
+                  runs: 0
+                };
+                setRules(prev => [newRule, ...prev]);
+                setAiOpsSubTab('rules');
+                onAddSystemLog('AI Commander', '注册备货阻断规则', '注册Nike Air Max 42码专属保税配给规则', 'success');
+                alert("【AI 指挥动作成功】\n- 规则注入成功！已将 Nike Air Max 42码 安全警戒线提高至 10 件。\n- 将自动流转至「📏 规则管理」页面。");
+              }
+            }
+          ]
+        });
+      }
+      // 3. 自动生成补货计划
+      else if (normalized.includes('智能补货计划') || normalized.includes('生成本周智能补货') || normalized.includes('补货计划')) {
+        setCommanderResult({
+          query: q,
+          description: "📝 【补货提案】通过跨租户 GMV 流速预测模型，本周预计采购预算划分建议如下：\n\n• 服装设计：$18,200 (重点补充夏季纯棉透气大单备给)\n• 餐饮外卖：$9,300 (慕尼黑连锁店生鲜配送合规补水)\n• 智能百货/POS：$4,800 (标配原件清空)\n\n预计可减少缺货流失率：28% 📈",
+          cards: [
+            {
+              title: "批准下派采购单并通告承运商",
+              icon: "emerald",
+              actionText: "物理启动全网物料批件采购",
+              color: 'emerald',
+              onAction: () => {
+                onAddSystemLog('AI Commander', '智能采购单签发', '全部核准 $32,300 本周智能采购计划并通知配载点', 'success');
+                alert("【AI 指挥动作成功】\n- 采购资金单 (€32,300) 已签发完毕！\n- 海关保税通道申报已自动过闸入网。");
+              }
+            }
+          ]
+        });
+      }
+      // 4. 找出利润最低业务
+      else if (normalized.includes('哪些业务正在亏钱') || normalized.includes('最低业务') || normalized.includes('亏钱')) {
+        setCommanderResult({
+          query: q,
+          description: "📉 【损益审计】全平台大促活动全面对账审计检测：\n\n发现正在低效空耗的亏损营销：\n• 活动名称：Summer Sale (夏季清仓大促)\n• 实绩 ROI：0.62 (每投入 1 欧元仅产生 0.62 欧元回报)\n• 预计无端浪费资金：$812 元\n• 亏损根由：保税物流平均清运摩擦上升，局部尺码不齐导致跳出率大幅升高。",
+          cards: [
+            {
+              title: "即时暂停该亏损营销活动",
+              icon: "🛑",
+              actionText: "物理阻断该活动通道",
+              color: 'rose',
+              onAction: () => {
+                onAddSystemLog('AI Commander', '暂停低ROI活动', '物理暂停 Summer Sale 全渠道大促投放', 'warning');
+                alert("【AI 指挥动作成功】\n- 投放渠道已挂断！针对 Summer Sale 的流量投放已物理暂缓。\n- 避免空耗，保护商家现金流。");
+              }
+            },
+            {
+              title: "调整抽佣比或降低租户分成",
+              icon: "💰",
+              actionText: "一键微调佣金费率保障商家",
+              color: 'amber',
+              onAction: () => {
+                setPlans(prev => prev.map(p => p.id === 'enterprise' ? { ...p, commission: 0.4 } : p));
+                onAddSystemLog('AI Commander', '佣金特批下调', '将企业大客佣金比例下调至 0.4% 降低流失', 'success');
+                alert("【AI 指挥动作成功】\n- 已对该亏损商家所绑定的旗舰版租户下调佣金至 0.4%，缓释商户毛利承压。");
+              }
+            }
+          ]
+        });
+      }
+      // 5. 查询全网异常订单
+      else if (normalized.includes('异常订单') || normalized.includes('查看异常订单')) {
+        setCommanderResult({
+          query: q,
+          description: "🔬 【订单异常】系统神经网络检测到以下高风险及处理迟钝的平台级异常订单：\n\n• 高风险欺诈订单：23 笔 (异地高频信用卡套现预警)\n• 账单支付失败：8 笔 (Stripe 通行网关短暂报错)\n• 重复重复支付：2 笔 (由于客户端轮询频率产生的瞬时订单)\n• 售后售后 SLA 延迟：13 笔 (超 48 小时未履约同意退款)",
+          cards: [
+            {
+              title: "一键创建平台审核与防御任务",
+              icon: "🛡️",
+              actionText: "排定风控智能体拦截与对齐",
+              color: 'rose',
+              onAction: () => {
+                const newApproval = {
+                  id: `appr_cmd_${Date.now()}`,
+                  tenant: '米兰风尚服装批发集团 (retail)',
+                  action: '全量挂起防御 23 笔境外高危套现订单',
+                  reason: 'AI Commander 批量核检拦截指令',
+                  time: '刚刚'
+                };
+                setPendingApprovals(prev => [newApproval, ...prev]);
+                setAiOpsSubTab('monitor');
+                onAddSystemLog('AI Commander', '特批反欺诈拦截', '批量将 23 笔欺诈单推送至人工合规财务审批', 'success');
+                alert("【AI 指挥动作成功】\n- 高危防欺诈审计已全部实施拦截！资金已安全暂扣。\n- 已自动为您跳转到中控「📈 执行监控」安全板块审核。");
+              }
+            }
+          ]
+        });
+      }
+      // 6. 查询增长最快行业
+      else if (normalized.includes('增长最快') || normalized.includes('哪个行业增长最快')) {
+        setCommanderResult({
+          query: q,
+          description: "📈 【高景气挖掘】本月全平台六大基础行业数据流速与 GMV 增长排行统计：\n\n① 美容预约（+21%）：夏季欧盟皇家女子女子美容Spa及皮肤调理预约极速拉升，客单均价攀升。\n② 餐饮外卖（+16%）：慕尼黑中餐深夜连锁厨房配送转化平稳爆发。\n③ POS门店（+11%）：物理快速结账 POS 端交易额回暖。",
+          cards: [
+            {
+              title: "扩大美容Spa行业AI员工月预算配额",
+              icon: "💇",
+              actionText: "增拨该高增速行业AI代币预算",
+              color: 'emerald',
+              onAction: () => {
+                onAddSystemLog('AI Commander', '增配高增速行业预算', '将罗马美容Spa会所租户的 AI 跑单预算调升至 $600', 'success');
+                alert("【AI 指挥动作成功】\n- 已优先增量分发！将罗马美容 Spa 店的主控 AI 智能体月预算物理增至 $600。\n- 确保流量高峰期智能响应零断档。");
+              }
+            }
+          ]
+        });
+      }
+      // 7. 分析流失客户
+      else if (normalized.includes('流失客户') || normalized.includes('流失')) {
+        setCommanderResult({
+          query: q,
+          description: "👥 【流失预警】根据近期买家复购周期与行为轨迹，系统识别到处于“亚流失”及“沉睡期”的高客单价买家：\n\n• 潜在流失人数：1,284 人\n• 预计损失交易额：$32,100 EUR 📉\n• 主力特征：买家注册满 30 天，已加入购物车 3 次但均未付款（多分布于法德大宗商区）。",
+          cards: [
+            {
+              title: "一键激活 CRM 自动回流优惠规则",
+              icon: "🎁",
+              actionText: "运行对账激活 15% 自动补水券并分发",
+              color: 'emerald',
+              onAction: () => {
+                const newRule = {
+                  id: `rule_churn_${Date.now()}`,
+                  ifCondition: '买家加入购物车3次且超15天未结算',
+                  thenAction: '推送15%大促催付专属券并短信提醒',
+                  active: true,
+                  runs: 1
+                };
+                setRules(prev => [newRule, ...prev]);
+                setAiOpsSubTab('rules');
+                onAddSystemLog('AI Commander', '促活特派分发', '一键启动 10240 位高潜买家挽单补贴券核分发机制', 'success');
+                alert("【AI 指挥动作成功】\n- 已排发 CRM 催付专属红包！\n- 挽留触发条件已物理写入规则集并注入 RAG 决策底层，前滚保护客盘。");
+              }
+            }
+          ]
+        });
+      }
+
+      else if (normalized.includes('健康') || normalized.includes('健康度')) {
+        setCommanderResult({
+          query: q,
+          description: "🩺 【健康网图】平台集群级物理监控及 API 网路网格整体诊断状态：\n\n• 核心网关 API：99.98% (运行绝佳) 🟢\n• 订单对账微服务：Stable (稳定) 🟢\n• Adyen 财务分账：Stable (活跃) 🟢\n• WMS库存索引：查库稍有延迟 (120ms，由于向量 FAQ 索引重建占用部分 IO)",
+          cards: [
+            {
+              title: "一键调拨全平台欧洲节点性能监控",
+              icon: "📈",
+              actionText: "跳转执行监控面板查看延时曲线",
+              color: 'indigo',
+              onAction: () => {
+                setAiOpsSubTab('monitor');
+                alert("已成功为您拉出！当前已物理对焦到 [📈 执行监控] 实名心跳网络监测。");
+              }
+            }
+          ]
+        });
+      }
+      // 11. 给我提升下个月利润
+      else if (normalized.includes('提升') && normalized.includes('利润')) {
+        setCommanderResult({
+          query: q,
+          description: "💰 【利润总览】通过对账、阻损以及优化供应链，下月预计可提升净毛利：\n\n+$48,200 EUR 📈\n\n最优优化组合指令如下：\n① 紧急物理暂缓 5 个回报率低于一线的低效推广（ROI < 1.2）\n② 动态上调 12 款畅销明星爆品的零售 MSRP 单价（小幅提升 2%，保护毛利）\n③ 派发 8 个生鲜及百货核心补货任务，防止脱货滑坡\n④ 自动提款并回收闲置的多租户 AI 智能体账户月度超编额度",
+          cards: [
+            {
+              title: "批准上述全部优化决策 (一键全部执行)",
+              icon: "⚡",
+              actionText: "启动多层物理优化并自动过流",
+              color: 'emerald',
+              onAction: () => {
+                const optimizedTasks = { id: `task_opt_${Date.now()}`, name: 'AI Commander 利润强劲优化系列', status: '运行中', successRate: 100, totalRuns: 1 };
+                setAiTasks(prev => [optimizedTasks, ...prev]);
+                onAddSystemLog('AI Commander', '全部核准提升利润大包', '批准4项提纯运营方案，预计拉升下月净利 $48,200', 'success');
+                alert("【AI 指挥动作成功】\n- 四重决策打包授权核准！\n- Summer Sale 等活动已进入物理阻断期；\n- 空闲 AI 溢出信用金已回收对公结算账户；\n- 补水备货已下排 WMS 发货舱。");
+              }
+            }
+          ]
+        });
+      }
+      // 12. 给平台做一次全面优化
+      else if (normalized.includes('优化整个系统') || normalized.includes('全面优化') || normalized.includes('系统运营') || normalized.includes('优化系统')) {
+        setCommanderResult({
+          query: q,
+          description: "🧠 【全面体检】AI 主脑完成对平台整机运营大维度的全网扫描，共评估 5 大指标缺陷：\n\n• WMS 库存缺口：18 个畅销品供给承压\n• 营销损耗点：6 款活动 ROI 失衡\n• 规则路由重合：2 项 IF-THEN 逻辑规则判定存在小幅竞合冲突\n• 智能体资源冗余：9 个多店铺 AI 智能体处理量极低但占用了巨额资金阀\n\n系统预计通过全面优化，可增量截留或增收效益：+$73,400 EUR 📈",
+          cards: [
+            {
+              title: "同意执行系统全面整备 (一键修复)",
+              icon: "🛠️",
+              actionText: "一键清除冲突、降温智能体、补货缺料",
+              color: 'emerald',
+              onAction: () => {
+                setExceptionTasks([]);
+                setRules(prev => prev.map(r => r.id === 'rule_4' ? { ...r, active: false } : r));
+                onAddSystemLog('AI Commander', '物理一键全局系统整备', '执行库存补水、规则防套利阻断、AI能耗降容，释放系统盈余 $73,400', 'success');
+                alert("【AI 指挥动作成功】\n- 全域合规整备完成！\n- 规则逻辑门重叠已在线重排修正；\n- 异常物流告警已降噪消除；\n- 闲置 AI 开支冻结，系统纯利溢价提升。");
+              }
+            }
+          ]
+        });
+      }
+      // 默认指令
+      else {
+        setCommanderResult({
+          query: q,
+          description: `🔮 已通过 RAG 解译自然语言指令。智慧决策底盘已成功为您规划并编译 1 笔高质效任务动作：`,
+          cards: [
+            {
+              title: `全量执行自主任务: 「${q}」`,
+              icon: "⚙️",
+              actionText: "物理派发并确认执行此物理动作",
+              color: 'indigo',
+              onAction: () => {
+                onAddSystemLog('AI Commander', '执行解译任务', `用户指定解译命令流成功下拨：${q}`, 'success');
+                alert(`【AI 指挥动作成功】\n- 已物理发送底座命令流：${q}，各租户沙箱已就绪响应。`);
+              }
+            }
+          ]
+        });
+      }
+    }, 1200);
+  };
+
+
+  const [isSimPlanDeployed, setIsSimPlanDeployed] = useState(false);
+
+  const getRoundtableData = (industry: IndustryType, playbookId: string, weights: any, targets: any) => {
+    let steps: any[] = [];
+    let results: any = null;
+
+    if (industry === 'fashion_wholesale' && playbookId === 'seasonal_clearance') {
+      steps = [
+        {
+          agent: 'commander',
+          name: '🧠 OPS Commander (运营总指挥官)',
+          avatar: '🤖',
+          role: 'Orchestrator',
+          opinion: `服装设计批发在当前季度受到换季库存积压偏高的严重阻力（静态库龄超120天）。根据权重：GMV占比（${weights.gmv}%），且库存健康系数高（${weights.inventoryHealth}%），我们必须以高流速、大批量的清货动作，在30天内消除滞存。`,
+          tradeoffs: `【均衡拆解】优先将库存周转天数压缩至 ${targets.inventoryTurnoverDaysMax} 天内，单品销售毛利空间让渡最大可容忍 -${Math.abs(targets.marginChangeRate * 100)}%。`
+        },
+        {
+          agent: 'pricing',
+          name: '💰 Pricing & Yield Agent (高频变体定价师)',
+          avatar: '📈',
+          role: 'Dynamic Revenue Control',
+          opinion: `为将周转周期拉回至 ${targets.inventoryTurnoverDaysMax} 天以内，我提议将畅销羊绒外套、加厚抗寒服标价全套单边下调 35%（平均售价调至标价 of €159 的 65%），利用降折让利换高流速动销。`,
+          tradeoffs: `【博弈损益】预计毛利回吐 ${(Math.abs(targets.marginChangeRate) * 100).toFixed(0)}%，但销售额 GMV 将强行累增 ${(targets.gmvChangeRate * 100).toFixed(0)}%。`
+        },
+        {
+          agent: 'inventory',
+          name: '🏭 Inventory Sourcing Agent (周转防断供专家)',
+          avatar: '📦',
+          role: 'Warehouse & Logistics Grid',
+          opinion: `慕尼黑/苏黎世仓静态周转超百日。配合定价核定降折，预计可在 15 天内强售 8,500 件，将周转天数降低为 28 天（好于 ${targets.inventoryTurnoverDaysMax}天 目标）。`,
+          tradeoffs: `【硬控决策】物理封停、强行熔断原定本周追加采购的 3,000 件抗寒大衣补单。`
+        },
+        {
+          agent: 'marketing',
+          name: '🎁 Campaign Marketing Agent (CRM 存量推广专家)',
+          avatar: '📣',
+          role: 'CRM Marketing',
+          opinion: `精准筛选西欧 10,240 名购物车静默批发买家，定向群派「WINTER-CLEAROUT-30」大促专属券，挽回结算实现精准爆量。`,
+          tradeoffs: `【营销平衡】预计消耗 SendGrid 额度，但挽回率拉爆 24.5%，老客复购与留存权重（${weights.retention}%）得到正面提振。`
+        },
+        {
+          agent: 'risk',
+          name: '🛡️ Risk & Payment Agent (交易反套汇风控官)',
+          avatar: '🕵️',
+          role: 'Gateway Security Manager',
+          opinion: `大比例低折扫货极易引起中间黄牛利用套网进行恶意囤货与后期退款。必须强制将退款纠纷率死锁在 ${(targets.refundRateMax * 100).toFixed(1)}% 最高限下。`,
+          tradeoffs: `【风控锁定】针对单笔结算 €800+ 级别的多件大单拉起人工二次财务复审，拦截可疑投机订单。`
+        }
+      ];
+      results = {
+        gameTheoryEquilibrium: 98.6,
+        metricsDelta: {
+          gmv: `+${(targets.gmvChangeRate * 100).toFixed(0)}%`,
+          margin: `-${Math.abs(targets.marginChangeRate * 100).toFixed(0)}% (换去库)`,
+          turnover: `120天 ➔ 28天 (低于预设定 ${targets.inventoryTurnoverDaysMax}天)`,
+          risk: `退款纠纷率控制在 ${(targets.refundRateMax * 100).toFixed(1)}% 以下`
+        },
+        propositions: [
+          `🏷️【折扣调控】畅销抗寒服装即刻下伏标价 -35%，以最大价格弹性拉平冷空气积压。`,
+          `📦【WMS冻结】物理挂起本月度原定对欧洲加工厂签发的 3,000 件冬季大衣采购单，回流储备金。`,
+          `📧【精准促销】向 10,240 名购物车沉睡静默买家群派「WINTER-CLEAROUT-30」代金券挽回结算。`,
+          `🛡️【反套利锁定】设定 €800+ 过滤盾，限制大宗扫货可疑结账，保护商户折扣不受投机冲击。`
+        ],
+        actionType: 'seasonal_clearance_done'
+      };
+    } else if (industry === 'fashion_wholesale' && playbookId === 'size_mix_optimization') {
+      steps = [
+        {
+          agent: 'commander',
+          name: '🧠 OPS Commander (运营总指挥官)',
+          avatar: '🤖',
+          role: 'Orchestrator',
+          opinion: `单品断码/偏码 XS/XXL 重度挤占货柜，仓储边际利用率降至 35%。根据周转高权重（${weights.inventoryHealth}%），必须通过尺码结构配比打散去库。`,
+          tradeoffs: `【均衡拆解】优先去偏码包，毛利容让度控制在 -${Math.abs(targets.marginChangeRate * 100)}% 水平。`
+        },
+        {
+          agent: 'pricing',
+          name: '💰 Pricing & Yield Agent (高频变体定价师)',
+          avatar: '📈',
+          role: 'Dynamic Revenue Control',
+          opinion: `提议单偏码拆件重新混合，打包定名「黄金混配整装包」，尺码套餐一揽子提供 40% 的折补，把长尾偏码账面净值尽早释放。`,
+          tradeoffs: `【博弈损益】毛利回吐，但将呆滞资金流动化，全店动销指数提高，拉高整体 GMV 增速。`
+        },
+        {
+          agent: 'inventory',
+          name: '🏭 Inventory Sourcing Agent (周转防断供专家)',
+          avatar: '📦',
+          role: 'Warehouse & Logistics Grid',
+          opinion: `调仓 WMS 把滞架 60 天以上的偏码强制下货集中，合并大仓，腾出黄金柜面供给即将上市的欧洲春夏热款。`,
+          tradeoffs: `【硬控决策】提高常规码 M/L 备货深度 20%，以多频小补货抗断供。`
+        },
+        {
+          agent: 'marketing',
+          name: '🎁 Campaign Marketing Agent (CRM 存量推广专家)',
+          avatar: '📣',
+          role: 'CRM Marketing',
+          opinion: `向历史上偏好配单大码/极小码的 1,850 名核心二级零售商推送「偏偏偏强清专属权益」，唤醒度预期达 22%。`,
+          tradeoffs: `【营销平衡】用最廉价的 EDM 促成特定圈层高客单整包去货。`
+        },
+        {
+          agent: 'risk',
+          name: '🛡️ Risk & Payment Agent (交易反套汇风控官)',
+          avatar: '🕵️',
+          role: 'Gateway Security Manager',
+          opinion: `由于是偏断码整包出港，必须在交易合同签署时附带「无质损不可单退」之反套保电子协议。`,
+          tradeoffs: `【风控锁定】最大化防范零售商拆包后把长尾滞销单码退回的客诉纠纷，退款率锁在 ${targets.refundRateMax * 100}%。`
+        }
+      ];
+      results = {
+        gameTheoryEquilibrium: 97.4,
+        metricsDelta: {
+          gmv: `+${(targets.gmvChangeRate * 100).toFixed(0)}%`,
+          margin: `-${Math.abs(targets.marginChangeRate * 100).toFixed(0)}% (断码折让)`,
+          turnover: `库存周转降低 15天`,
+          risk: `不可逆协议控退低于 ${targets.refundRateMax * 100}%`
+        },
+        propositions: [
+          `🏷️【混编策略】发布 XS/XXL 偏码配单计划，大套餐下浮 40% 定向清算。`,
+          `📦【WMS调配】WMS 后台自动将滞架断码服装统一封存，移往非黄金备货货架。`,
+          `📧【老客清退】向 1,850 名偏码敏感店老板定向发送配单清算邮件包。`,
+          `🛡️【争议拒付】阻断断码商品的单件破拆退货请求，保障整批买断条款落地。`
+        ],
+        actionType: 'size_mix_optimization_done'
+      };
+    } else if (industry === 'restaurant_takeout' && playbookId === 'increase_aov_with_meal_bundles') {
+      steps = [
+        {
+          agent: 'commander',
+          name: '🧠 OPS Commander (运营总指挥官)',
+          avatar: '🤖',
+          role: 'Orchestrator',
+          opinion: `餐馆外卖属于极速流业态。针对提升客单价，主配产品套餐化打包是实现 AOV 拔高的核心路径。结合权重，拉拔 GMV 是第一准则（${weights.gmv}%）。`,
+          tradeoffs: `【整合提质】配售冰饮、风味薯条。毛利率容吐控制在 -${Math.abs(targets.marginChangeRate * 100)}% 舒适区内。`
+        },
+        {
+          agent: 'pricing',
+          name: '💰 Pricing & Yield Agent (高频变体定价师)',
+          avatar: '📈',
+          role: 'Dynamic Revenue Control',
+          opinion: `提议将主菜单体(如 Truffle Burger)搭配原切粗薯与冰萃红茶订立三项合一「极客能量套餐」，定价为单点价之 78%（即 €19.9），利用强锚点刺激成套餐订购。`,
+          tradeoffs: `【博弈损益】单客利润回吐 5.4%，但有效拉高单每单 AOV 至 €20+，总体 GMV 拔高约 25%。`
+        },
+        {
+          agent: 'inventory',
+          name: '🏭 Inventory Sourcing Agent (周转防断供专家)',
+          avatar: '📦',
+          role: 'Warehouse & Logistics Grid',
+          opinion: `食材易损性极高。成套餐搭配能让配膳小食与冰品食材损耗消散率改善 15%，后厨备料损耗降低。`,
+          tradeoffs: `【硬控决策】根据食材当日 3 小时物理有效期随时向骑手分配备餐队列。`
+        },
+        {
+          agent: 'marketing',
+          name: '🎁 Campaign Marketing Agent (CRM 存量推广专家)',
+          avatar: '📣',
+          role: 'CRM Marketing',
+          opinion: `针对白领及年轻社群每日中午 11:30、下午 17:30 黄金订餐时段推送 App 弹窗与满减推送「午间能量三合一套餐」。`,
+          tradeoffs: `【营销平衡】点击转化率预计爆量提高 2.8x，老客唤醒频度大幅提拔。`
+        },
+        {
+          agent: 'risk',
+          name: '🛡️ Risk & Payment Agent (交易反套汇风控官)',
+          avatar: '🕵️',
+          role: 'Gateway Security Manager',
+          opinion: `外卖最频发的争议在于迟配送退退款及虚假未妥投客诉。我提议将配送 SLA 协议与地图路由（ETA API）联动卡点，防范虚假索赔。`,
+          tradeoffs: `【风控锁定】将欺诈纠纷率严控在 ${(targets.refundRateMax * 100).toFixed(1)}% 的区间，避免羊毛党白嫖餐品。`
+        }
+      ];
+      results = {
+        gameTheoryEquilibrium: 99.1,
+        metricsDelta: {
+          gmv: `AOV 平均提升 26% (GMV大幅看涨)`,
+          margin: `-${Math.abs(targets.marginChangeRate * 100).toFixed(0)}% (食材打包让利)`,
+          turnover: `生鲜损配废弃率降低 15%`,
+          risk: `配送引发纠纷卡死在 ${(targets.refundRateMax * 100).toFixed(1)}% 内`
+        },
+        propositions: [
+          `🏷️【套餐标价】上线「西欧经典 Truffle 套餐」标价 €19.9，取代单件分散购买。`,
+          `📦【后厨备餐】WMS 联动 WCS 生鲜称重端，优先分配高周转熟食耗材进行套餐组配。`,
+          `📧【点卡推送】向写字楼周边 5 公里常驻老买家精排推送午间配餐通知。`,
+          `🛡️【ETA防套】对接物流高德/谷歌实时配送时效验证机制，自动拦截不实未妥投争议。`
+        ],
+        actionType: 'increase_aov_done'
+      };
+    } else if (industry === 'restaurant_takeout' && playbookId === 'improve_repurchase_rate') {
+      steps = [
+        {
+          agent: 'commander',
+          name: '🧠 OPS Commander (运营总指挥官)',
+          avatar: '🤖',
+          role: 'Orchestrator',
+          opinion: `提高回头客黏性（复购高达 ${weights.retention}%）是抵御公域引流成本剧烈飙涨的关键。应当将流失 30 天以上的老客户列为高危唤醒级别。`,
+          tradeoffs: `【整合提质】给到精准二次回头客立享 15% 优惠点单，在合理的利空间内拉动无限生命。`
+        },
+        {
+          agent: 'pricing',
+          name: '💰 Pricing & Yield Agent (高频变体定价师)',
+          avatar: '📈',
+          role: 'Dynamic Revenue Control',
+          opinion: `设计「老顾客专享 15% 极速优惠返场红包」，仅支持 72 小时点餐使用。多发性低折将从常客黏客中赚得长期利差.`,
+          tradeoffs: `【博弈损益】单次点算让折 15%，但在复购频率翻倍的提拉下，商家的单客长期生命周期总值 LTV 提拔 35% 以上。`
+        },
+        {
+          agent: 'inventory',
+          name: '🏭 Inventory Sourcing Agent (周转防断供专家)',
+          avatar: '📦',
+          role: 'Warehouse & Logistics Grid',
+          opinion: `保障回头客的备品充裕。系统自动为二次下单回头客保留后厨特色招牌热门食材 reservation，优先进行高质配送。`,
+          tradeoffs: `【硬控决策】高峰期老订户享受“绿色极速拨餐通道”，减低妥投摩擦。`
+        },
+        {
+          agent: 'marketing',
+          name: '🎁 Campaign Marketing Agent (CRM 存量推广专家)',
+          avatar: '📣',
+          role: 'CRM Marketing',
+          opinion: `从历史沉潜的 8,400 名沉默老熟客库中提取出“非敏感高价段老客”，派送「好久不见，专属于您」的菜系精选单卡推送。`,
+          tradeoffs: `【营销平衡】预计回扫率提至 18.2%，极高幅度改善复购与留存 KPI。`
+        },
+        {
+          agent: 'risk',
+          name: '🛡️ Risk & Payment Agent (交易反套汇风控官)',
+          avatar: '🕵️',
+          role: 'Gateway Security Manager',
+          opinion: `常驻会员享用免审退换特权。针对超高留存权重的常客，利用高信任等级减少审核卡关，但单次索赔纠纷依然用账期抵扣模式做好核算防套。`,
+          tradeoffs: `【风控锁定】将系统争议纠纷率控制在 ${targets.refundRateMax * 100}% 指标红线下。`
+        }
+      ];
+      results = {
+        gameTheoryEquilibrium: 98.2,
+        metricsDelta: {
+          gmv: `老客交易成交额提拉 32%`,
+          margin: `毛利率平稳浮动 1.2%`,
+          turnover: `饭席流失率降到 4.5%`,
+          risk: `低阻客诉摩擦，争议控制在安全值`
+        },
+        propositions: [
+          `🏷️【回头特许】注入「老客返场 15% 专属直下规则」至商户支付中台。`,
+          `📦【绿色备配】WMS 数据库一键向常备招牌招牌菜谱打标老熟客专属库存保留。`,
+          `📧【召回邮件】执行全自动 WhatsApp / Email 「客情专属关怀与食谱上新召唤」服务。`,
+          `🛡️【信任等级】将 4,550 名星级熟买家划分至防欺诈免检队列，削减退款繁琐摩擦。`
+        ],
+        actionType: 'improve_repurchase_done'
+      };
+    } else if (industry === 'general_merch_electronics' && playbookId === 'high_value_risk_control') {
+      steps = [
+        {
+          agent: 'commander',
+          name: '🧠 OPS Commander (运营总指挥官)',
+          avatar: '🤖',
+          role: 'Orchestrator',
+          opinion: `百货电器单客单极高、欺诈风控权重高达（${weights.risk}%）。必须把防范欺诈、盗刷、退卡撤单纠纷定为头等紧急战略。`,
+          tradeoffs: `【整合提质】绝不向大批量通用折子放行以防产生洗单洗金。毛利率损耗卡在 -3% 极高保值线上。`
+        },
+        {
+          agent: 'pricing',
+          name: '💰 Pricing & Yield Agent (高频变体定价师)',
+          avatar: '📈',
+          role: 'Dynamic Revenue Control',
+          opinion: `针对高货值电器实施刚性守价。禁止全网任何非受信第三方接入使用叠层折扣，通过全价保修提振交易真实度。`,
+          tradeoffs: `【博弈损益】牺牲 2.5% 的极客下单流速，但强撑毛利，从保费与真实单款中取得最优毛利率（${weights.margin}%）。`
+        },
+        {
+          agent: 'inventory',
+          name: '🏭 Inventory Sourcing Agent (周转防断供专家)',
+          avatar: '📦',
+          role: 'Warehouse & Logistics Grid',
+          opinion: `高额度电器的仓仓周转、途中受损也是极高资损。我们将强制要求对单单出货强制挂接带有 GPS 和签字实到追溯的高级保税 DHL 标签。`,
+          tradeoffs: `【硬控决策】在途库龄损耗降低 22.5%，不出现高赔付丢失。`
+        },
+        {
+          agent: 'marketing',
+          name: '🎁 Campaign Marketing Agent (CRM 存量推广专家)',
+          avatar: '📣',
+          role: 'CRM Marketing',
+          opinion: `大额顾客偏好质保与售后保障。我们推介「3 年平台联保无忧险」作为附随结算捆绑，用保障体验增强付款底盘。`,
+          tradeoffs: `【营销平衡】既在不砸价的情况下促成了大单转化，还提升了高附加附加服务的附带高利率。`
+        },
+        {
+          agent: 'risk',
+          name: '🛡️ Risk & Payment Agent (交易反套汇风控官)',
+          avatar: '🕵️',
+          role: 'Gateway Security Manager',
+          opinion: `拦截高风险 BIN 卡。欺诈高频作案于盗刷大宗显卡、大屏屏幕。我将开启强制 3DS 强认证，并针对 €600+ 高危支付进行强制二次 IP 物理沙箱校验。`,
+          tradeoffs: `【风控锁定】将系统恶意撤单退款欺诈成功率断头跌至 0.02% 以下，远低于 ${targets.refundRateMax * 100}% 的容限红线。`
+        }
+      ];
+      results = {
+        gameTheoryEquilibrium: 99.5,
+        metricsDelta: {
+          gmv: `单客 AOV 保持在 €620+`,
+          margin: `毛利率高保至 34.5% 的巅峰健康段`,
+          turnover: `在途损耗率降为 0.05%`,
+          risk: `信用卡撤金退款成功率强制断崖式拦截 98.4%`
+        },
+        propositions: [
+          `🏷️【保价护航】对数码/百货电器大单强制锁定官方价保，禁止折叠溢算。`,
+          `📦【WMS贵品仓】将 €500 级数码商品搬入特殊专员监控仓，启用带有签字证明的全程保税配送路由。`,
+          `📧【险卡推广】在结算账期全链挂载「3年联保综合保障无忧险」搭售购买保障。`,
+          `🛡️【高敏支付盾】对大额支付强制加载 3D-Secure 强验与多节点防盗刷拦截。`
+        ],
+        actionType: 'high_value_risk_done'
+      };
+    } else {
+      const pTitle = IndustryStrategies[industry]?.defaultPlaybooks.find(p => p.id === playbookId)?.name || '默认经营';
+      steps = [
+        {
+          agent: 'commander',
+          name: '🧠 OPS Commander (运营总指挥官)',
+          avatar: '🤖',
+          role: 'Orchestrator',
+          opinion: `针对当前行业下执行的「${pTitle}」策略：我们需要在满足当前目标权重（GMV: ${weights.gmv}%, 利润: ${weights.margin}%）的前提下，充分发挥智能化优势和协作智能体的潜力。`,
+          tradeoffs: `【均衡拆解】优先将库存周转预期天数压缩至 ${targets.inventoryTurnoverDaysMax} 天，同时保持风险可抗。`
+        },
+        {
+          agent: 'pricing',
+          name: '💰 Pricing & Yield Agent (高频变体定价师)',
+          avatar: '📈',
+          role: 'Dynamic Revenue Control',
+          opinion: `衡量弹性，提议采用动态溢价/打折调优，总体折损幅度严格限制在 -${Math.abs(targets.marginChangeRate * 100)}% 以内以确保盈利底盘。`,
+          tradeoffs: `【博弈损益】以精细化的折让幅度拉起全网租户的客单成交 GMV 增速。`
+        },
+        {
+          agent: 'inventory',
+          name: '🏭 Inventory Sourcing Agent (周转防断供专家)',
+          avatar: '📦',
+          role: 'Warehouse & Logistics Grid',
+          opinion: `进行库位动态排卡，压缩闲置库位，并实现 28 天出货流速，保持供应链的绝对平滑。`,
+          tradeoffs: `【硬控决策】实时拉低备品保有周期，防止货值折旧折旧率对资损造成的冲击。`
+        },
+        {
+          agent: 'marketing',
+          name: '🎁 Campaign Marketing Agent (CRM 存量推广专家)',
+          avatar: '📣',
+          role: 'CRM Marketing',
+          opinion: `向指定偏好的回头客（留存权重: ${weights.retention}%）分发针对性的精准营销优惠，最大化回购效率。`,
+          tradeoffs: `【营销平衡】不依赖大量烧广告买公域流量，完成 ${Math.ceil(targets.gmvChangeRate * 100)}% 跃升。`
+        },
+        {
+          agent: 'risk',
+          name: '🛡️ Risk & Payment Agent (交易反套汇风控官)',
+          avatar: '🕵️',
+          role: 'Gateway Security Manager',
+          opinion: `对于大宗结账或者可疑支付路径强制拉起 3DS 甚至 IP 人工审计，将恶意退款与纠纷控制在 ${targets.refundRateMax * 100}% 容限内。`,
+          tradeoffs: `【风控锁定】针对可疑支付流启动快速安全拦截。`
+        }
+      ];
+      results = {
+        gameTheoryEquilibrium: 98.2,
+        metricsDelta: {
+          gmv: `+${(targets.gmvChangeRate * 100).toFixed(0)}%`,
+          margin: `-${Math.abs(targets.marginChangeRate * 100).toFixed(0)}%`,
+          turnover: `在预定天数内出清 (< ${targets.inventoryTurnoverDaysMax}天)`,
+          risk: `安全扼制退款低于 ${(targets.refundRateMax * 100).toFixed(1)}%`
+        },
+        propositions: [
+          `🏷️【战前标价】根据「${pTitle}」：在线注入渠道综合定价折扣比例。`,
+          `📦【WMS调流】设置最薄补备库存常备中枢参数，极速周转降低资损。`,
+          `📧【专属群派】向受众及常熟常买家圈派特许礼遇代金券。`,
+          `🛡️【结算校验】启动最严安全收付款验证防火墙，保障商户资金清算安全无扰。`
+        ],
+        actionType: `${playbookId}_done`
+      };
+    }
+
+    return { steps, results };
+  };
+
+  const handleLaunchMockSimulation = () => {
+    setCockpitPhase('simulating');
+    setCurrentSimulationIndex(-1);
+    setSimulationResults(null);
+    setSimulationRoundtable([]);
+    setIsSimPlanDeployed(false);
+
+    onAddSystemLog('Simulation Cockpit', '启动多智能体仿真', `对齐目标权重（GMV: ${businessGoal.priorityWeights.gmv}%, 利润: ${businessGoal.priorityWeights.margin}%, 库存: ${businessGoal.priorityWeights.inventoryHealth}%, 留存: ${businessGoal.priorityWeights.retention}%, 风控: ${businessGoal.priorityWeights.risk}）启动全网联合博弈。`, 'info');
+
+    const { steps: roundtableSteps, results: simResults } = getRoundtableData(
+      selectedSimIndustry,
+      selectedPlaybookId,
+      businessGoal.priorityWeights,
+      businessGoal.metricsTarget
+    );
+
+    let tempArray: typeof roundtableSteps = [];
+    roundtableSteps.forEach((step, idx) => {
+      setTimeout(() => {
+        tempArray.push(step);
+        setSimulationRoundtable([...tempArray]);
+        setCurrentSimulationIndex(idx);
+        onAddSystemLog('Simulation Cockpit', '智能体协同发表意见', `[${step.name}] 就多维业务目标的博弈权重表明了联合方案`, 'info');
+
+        if (idx === roundtableSteps.length - 1) {
+          setCockpitPhase('done');
+          setSimulationResults(simResults);
+          onAddSystemLog('Simulation Cockpit', '联合对账博弈收敛成功', '多智能体关于当前策略之博弈方案收敛完毕。', 'success');
+        }
+      }, (idx + 1) * 350);
+    });
+  };
+
+  const executeSimulationPlanDeploy = () => {
+    if (!simulationResults) return;
+    setIsSimPlanDeployed(true);
+    
+    // Create new physics rule mapping:
+    const clearoutRule = {
+      id: `rule_clearout_${Date.now()}`,
+      ifCondition: `冬季积货库存 > 500件 & 气温偏差 > +2°C`,
+      thenAction: `自动价格折让 35% 且邮件群发折扣券给沉默客户`,
+      active: true,
+      runs: 10240
+    };
+    setRules(prev => [clearoutRule, ...prev]);
+
+    // Create a physical ready task:
+    const clearTask = {
+      id: `task_clear_${Date.now()}`,
+      name: '❄️ 全网自适应暖冬大清仓战役部署',
+      status: '运行中',
+      successRate: 100,
+      totalRuns: 10240
+    };
+    setAiTasks(prev => [clearTask, ...prev]);
+
+    onAddSystemLog('Multi-Agent Cockpit', '物理生效仿真并部署租户', '全面部署4项协同调优策略到所有存量租户店内，启动流量投放', 'success');
+    alert("【最高级多智能体多任务协同部署成功】\n\n- 4 项联合调控指令已在线物理热部署！\n- 规则中心（Rules Engine）已热更新添加：『冬季积货库存 > 500件... ➔ 自动降折 35% 并派券』\n- WMS 物料调度已完成冻结，节省仓容成本；\n- 10,240 封挽留邮件已排入 SendGrid 推送通道异步群发。");
+  };
 
   const handleUpdatePlan = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1046,6 +2090,925 @@ export default function SuperAdminCenter({
               <h2 className="text-xl font-bold text-slate-900 tracking-tight">🧠 平台型智能操作中心 (SaaS Intelligent Operations Control Center)</h2>
               <p className="text-xs text-slate-500 mt-1">控制、配置并审计整个 SaaS 平台中多租户隔离的 AI 智能体、工作流拓扑、自动化规则、事件网格与执行健康状况</p>
             </div>
+          </div>
+
+          {/* 🧠 AI Commander (AI 指挥官) - Quick Operations Executive Gate */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden text-left font-sans">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div className="flex items-center gap-2 mb-4">
+              <span className="bg-indigo-500/10 text-indigo-400 p-1.5 rounded-lg border border-indigo-500/20">
+                <Bot className="w-5 h-5 text-indigo-400 animate-pulse" />
+              </span>
+              <div>
+                <h3 className="text-sm font-extrabold text-white tracking-wide flex items-center gap-2">
+                  <span>🧠 AI 指挥官 (AI Commander Console V1)</span>
+                  <span className="text-[9px] bg-indigo-500/20 text-indigo-300 font-mono font-black border border-indigo-500/30 px-1.5 py-0.5 rounded leading-none">HIGH-PERFORMANCE SYSTEM MASTER</span>
+                </h3>
+                <p className="text-[10px] text-slate-400 mt-0.5 font-medium">会理解、会决策、会执行、会监控、会自适应的多租户智能底盘。点击下方 12 项真实系统级的控制命令，自动下派沙箱阻断、采购及规则热部署任务：</p>
+              </div>
+            </div>
+
+            {/* Input Form Section - 请输入目标 */}
+            <div className="space-y-4">
+              <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] text-slate-300 font-extrabold flex items-center gap-1">
+                    🎯 请输入目标。
+                  </span>
+                  <span className="text-[9px] text-indigo-400 font-mono">SYS_SHELL_ACTIVE</span>
+                </div>
+                <div className="flex gap-2">
+                  <input 
+                    type="text"
+                    value={commanderQuery}
+                    onChange={(e) => setCommanderQuery(e.target.value)}
+                    placeholder="例如：分析最近30天订单下降原因 / 查看全网库存异常商品 / 帮我提升下个月利润 并在下方选择执行..."
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleCommanderCommand(commanderQuery);
+                    }}
+                    className="flex-1 bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder-slate-600 font-sans"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleCommanderCommand(commanderQuery)}
+                    disabled={isCommanderExecuting}
+                    className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
+                  >
+                    {isCommanderExecuting ? (
+                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    ) : (
+                      <Send className="w-3.5 h-3.5" />
+                    )}
+                    <span>命令直接下发</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Robust 12 Production Commands Grid Deck */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                    ⚙️ V1 全域极速指挥控制台 (点击直接发送物理动作)
+                  </span>
+                  <span className="text-[9px] text-emerald-400 font-extrabold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">🟢 Ready</span>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                  {[
+                    {
+                      label: "📊 分析最近30天订单下降原因",
+                      cmd: "分析最近30天订单下降原因",
+                      desc: "诊断多租户备货、流量投放与运力摩擦",
+                      cat: "数据诊断"
+                    },
+                    {
+                      label: "🔍 查找全网库存异常商品",
+                      cmd: "查看全网库存异常商品",
+                      desc: "扫描6大主业多租户，秒级筛查断供风险",
+                      cat: "全局库存"
+                    },
+                    {
+                      label: "📦 自动生成智能补货计划",
+                      cmd: "生成本周智能补货计划",
+                      desc: "预测本周流速并计算合理的采购预算硬配额",
+                      cat: "供应链"
+                    },
+                    {
+                      label: "💸 找出利润最低亏损业务",
+                      cmd: "哪些业务正在亏钱",
+                      desc: "交叉对账审计，对毛利失速或推广空耗的商户亮红灯",
+                      cat: "商业增效"
+                    },
+                    {
+                      label: "🚨 查找全网高风险异常订单",
+                      cmd: "查看全网异常订单",
+                      desc: "全生命周期筛查境外洗钱欺诈与 SLA 延迟订单",
+                      cat: "健康防护"
+                    },
+                    {
+                      label: "📈 查询全网增长最快行业",
+                      cmd: "哪个行业增长最快？",
+                      desc: "对全谱系租户开单大盘进行实时极景热力排序",
+                      cat: "商业增效"
+                    },
+                    {
+                      label: "👥 分析流失与购物车沉睡客户",
+                      cmd: "分析最近流失客户",
+                      desc: "抓取加购未支付潜在沉睡池并预置催付流机制",
+                      cat: "客户中心"
+                    },
+                    {
+                      label: "📏 优化安全库存警戒水位策略",
+                      cmd: "优化库存策略并更新规则",
+                      desc: "批量自动调控畅销款安全线并编译 IF-THEN 拦截",
+                      cat: "规则控制"
+                    },
+                    {
+                      label: "🤖 查询多租户AI员工运行状态",
+                      cmd: "查看AI员工运行情况",
+                      desc: "检测多租户沙箱隔离中 Pricing/Retention 的心跳",
+                      cat: "AI员工中心"
+                    },
+                    {
+                      label: "🩺 检查平台全域系统健康度",
+                      cmd: "查看平台健康度",
+                      desc: "监控 API 高频网关、WMS、Adyen结算服务延迟",
+                      cat: "健康防护"
+                    },
+                    {
+                      label: "💰 提升下个月净利润优化方案",
+                      cmd: "帮我提升下个月利润",
+                      desc: "打包暂缓低效广告、上调零售价 2% 及提款超额预算",
+                      cat: "全局指挥"
+                    },
+                    {
+                      label: "🛠️ 给平台发起一键全面优化整备",
+                      cmd: "优化整个系统运营",
+                      desc: "多任务并进一键除障、重组冗余智能体与逻辑规则冲突",
+                      cat: "全局指挥"
+                    }
+                  ].map((item, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setCommanderQuery(item.cmd);
+                        handleCommanderCommand(item.cmd);
+                      }}
+                      disabled={isCommanderExecuting}
+                      className="group text-left p-2.5 bg-slate-950/80 hover:bg-slate-900 border border-slate-800/80 hover:border-indigo-500/50 rounded-xl transition-all cursor-pointer flex flex-col justify-between space-y-1 disable:opacity-50"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-extrabold text-slate-100 group-hover:text-indigo-300 transition-colors leading-tight truncate">
+                          {item.label}
+                        </span>
+                        <span className="text-[8px] bg-slate-900 text-slate-500 px-1 rounded-sm border border-slate-800 shrink-0">
+                          {item.cat}
+                        </span>
+                      </div>
+                      <p className="text-[9px] text-slate-500 tracking-wide leading-snug line-clamp-2">
+                        {item.desc}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Simulated Live Action Outputs Area */}
+            {isCommanderExecuting && (
+              <div className="mt-4 pt-4 border-t border-slate-800 flex items-center justify-center py-6 gap-2 text-xs text-slate-400 font-mono font-bold animate-pulse">
+                <span className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></span>
+                <span>AI Commander 正在跨租户收集隔离数据进行一致性对账并构建控制块指令...</span>
+              </div>
+            )}
+
+            {!isCommanderExecuting && commanderResult && (
+              <div className="mt-4 pt-4 border-t border-slate-800 space-y-3.5 animate-fadeIn text-xs text-left">
+                <div className="p-3 bg-indigo-950/20 border border-indigo-905/30 rounded-xl">
+                  <p className="text-[10px] font-bold text-indigo-400 font-mono uppercase tracking-wider mb-1">执行解译输出:</p>
+                  <p className="text-slate-300 font-medium leading-relaxed">{commanderResult.description}</p>
+                </div>
+
+                {/* Structured UI Action Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {commanderResult.cards.map((card, cidx) => {
+                    let borderCol = "border-slate-800";
+                    let textCol = "text-indigo-400";
+                    let bgCol = "bg-indigo-500/5";
+
+                    if (card.color === 'rose') {
+                      borderCol = "border-rose-950/40 hover:border-rose-900/60";
+                      textCol = "text-rose-400";
+                      bgCol = "bg-rose-500/5";
+                    } else if (card.color === 'amber') {
+                      borderCol = "border-amber-950/40 hover:border-amber-900/60";
+                      textCol = "text-amber-400";
+                      bgCol = "bg-amber-500/5";
+                    } else if (card.color === 'emerald') {
+                      borderCol = "border-emerald-950/40 hover:border-emerald-900/60";
+                      textCol = "text-emerald-400";
+                      bgCol = "bg-emerald-500/5";
+                    } else if (card.color === 'indigo') {
+                      borderCol = "border-indigo-950/40 hover:border-indigo-900/60";
+                      textCol = "text-indigo-400";
+                      bgCol = "bg-indigo-500/5";
+                    }
+
+                    return (
+                      <div 
+                        key={cidx} 
+                        className={`p-3.5 rounded-xl border ${borderCol} ${bgCol} flex flex-col justify-between space-y-3 transition-all text-left`}
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-base">
+                            <span>{card.icon}</span>
+                            <span className={`text-[10px] font-extrabold uppercase ${textCol} tracking-wide font-sans`}>
+                              {card.color === 'rose' ? '🚨 CRITICAL WARNING' : card.color === 'amber' ? '⚠️ ADVISORY ACTIONS' : '⚙️ RUNNING DIRECTIVE'}
+                            </span>
+                          </div>
+                          <p className="font-extrabold text-white text-xs leading-snug">{card.title}</p>
+                        </div>
+
+                        <button
+                          onClick={card.onAction}
+                          className="w-full text-center py-2 rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 hover:text-white font-extrabold text-[10px] uppercase font-sans tracking-wider transition-colors cursor-pointer"
+                        >
+                          🏗️ {card.actionText}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 🎯 AI Commander OS V2: 多智能体与目标权重联合控制沙盘 (Goal-Driven Multi-Agent Simulation Cockpit) */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden text-left font-sans space-y-6">
+            <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
+            
+            {/* Header section with high tech subtitle */}
+            <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 gap-4">
+              <div className="flex items-center gap-3">
+                <span className="bg-indigo-500/10 text-indigo-400 p-2 rounded-xl border border-indigo-500/20">
+                  <SlidersHorizontal className="w-6 h-6 text-indigo-400" />
+                </span>
+                <div>
+                  <h3 className="text-base font-black text-white tracking-wide flex items-center gap-2">
+                    <span>🎯 AI Commander OS V2: 目标权重与多智能体博弈决策沙盘</span>
+                    <span className="text-[10px] bg-red-500/25 text-red-300 font-mono font-black border border-red-500/30 px-2 py-0.5 rounded leading-none text-right">PREMIUM OP COCKPIT</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
+                    摒弃“纯聊天的AI敷衍模式”。支持管理员输入核心多重经营目标及权重，召集【运营/动态定价/WMS排卡/存量推广/风控网关】多智能体，就目标和成本进行多目标轮次协同博弈决策，最终核准生成并下达真实指令。
+                  </p>
+                </div>
+              </div>
+
+              {/* Campaign Preset Selectors */}
+              <div className="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 shrink-0 select-none">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActivePresetCampaign('winter_clearout');
+                    setBusinessGoal({
+                      timeRange: { preset: 'next_month', from: '', to: '' },
+                      metricsTarget: {
+                        gmvChangeRate: 0.20,
+                        ordersChangeRate: 0.15,
+                        marginChangeRate: -0.07,
+                        refundRateMax: 0.03,
+                        inventoryTurnoverDaysMax: 35
+                      },
+                      priorityWeights: {
+                        gmv: 40,
+                        margin: 30,
+                        inventoryHealth: 20,
+                        retention: 0,
+                        risk: 10
+                      }
+                    });
+                    setSelectedModalFile('winter_aging_analysis.xlsx');
+                    onAddSystemLog('Simulation Cockpit', '载入预设战役', '已导入：❄️ 暖冬库存积货大清仓决策预设（加载 multi-modal 文件和目标权重）', 'info');
+                  }}
+                  className={`px-4.5 py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${activePresetCampaign === 'winter_clearout' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  <span>❄️ 暖冬积货清仓战役</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActivePresetCampaign('none');
+                    setCockpitPhase('idle');
+                    setSimulationResults(null);
+                    setSimulationRoundtable([]);
+                    onAddSystemLog('Simulation Cockpit', '自定义配置', '切换为自定义经营目标管理模式', 'info');
+                  }}
+                  className={`px-4.5 py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${activePresetCampaign === 'none' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  <span>🛠️ 自定义全局经营战略</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 🎯 行业预设方案快速同步与脑智选择器 */}
+            <div className="bg-slate-950 p-4 rounded-xl border border-indigo-900/35 flex flex-wrap items-center justify-between gap-4 font-sans text-xs">
+              <div className="space-y-1 text-left">
+                <span className="text-[9px] bg-indigo-500/10 text-indigo-400 font-extrabold px-1.5 py-0.5 rounded tracking-wide uppercase border border-indigo-500/20">INDUSTRY DECISION BRAIN</span>
+                <h4 className="text-xs font-black text-white">
+                  当前载入核心智能：
+                  <span className="text-indigo-400">
+                    {selectedSimIndustry === 'fashion_wholesale' && '👕 服装设计批发 (Fashion Wholesale)'}
+                    {selectedSimIndustry === 'restaurant_takeout' && '🍔 餐馆外卖 (Restaurant Takeout)'}
+                    {selectedSimIndustry === 'general_merch_electronics' && '🧩 普通百货与电器 (General Merch & Electronics)'}
+                    {selectedSimIndustry === 'beauty_booking' && '💄 美业预约 (Beauty Booking)'}
+                  </span>
+                </h4>
+              </div>
+
+              <div className="flex flex-wrap gap-3 items-center">
+                {/* Simulated Industry Dropdown */}
+                <div className="flex flex-col gap-1 items-start">
+                  <span className="text-[10px] text-slate-400 font-bold">行业选择 (Industry):</span>
+                  <select
+                    value={selectedSimIndustry}
+                    onChange={(e) => {
+                      const ind = e.target.value as IndustryType;
+                      setSelectedSimIndustry(ind);
+                      // Default to first playbook of that industry
+                      const defaultPlaybooks: Record<string, string> = {
+                        fashion_wholesale: 'seasonal_clearance',
+                        restaurant_takeout: 'increase_aov_with_meal_bundles',
+                        general_merch_electronics: 'high_value_risk_control',
+                        beauty_booking: 'treatment_renewal'
+                      };
+                      const pId = defaultPlaybooks[ind] || 'default';
+                      setSelectedPlaybookId(pId);
+                      
+                      // Auto-update presets to match
+                      if (ind === 'fashion_wholesale') {
+                        setBusinessGoal({
+                          timeRange: { preset: 'next_month', from: '', to: '' },
+                          metricsTarget: {
+                            gmvChangeRate: 0.25,
+                            ordersChangeRate: 0.18,
+                            marginChangeRate: -0.05,
+                            refundRateMax: 0.03,
+                            inventoryTurnoverDaysMax: 35
+                          },
+                          priorityWeights: {
+                            gmv: 30,
+                            margin: 20,
+                            inventoryHealth: 40,
+                            retention: 5,
+                            risk: 5
+                          }
+                        });
+                        setSelectedModalFile('winter_aging_analysis.xlsx');
+                      } else if (ind === 'restaurant_takeout') {
+                        setBusinessGoal({
+                          timeRange: { preset: 'next_month', from: '', to: '' },
+                          metricsTarget: {
+                            gmvChangeRate: 0.18,
+                            ordersChangeRate: 0.12,
+                            marginChangeRate: -0.04,
+                            refundRateMax: 0.015,
+                            inventoryTurnoverDaysMax: 3
+                          },
+                          priorityWeights: {
+                            gmv: 25,
+                            margin: 20,
+                            inventoryHealth: 10,
+                            retention: 35,
+                            risk: 10
+                          }
+                        });
+                        setSelectedModalFile('restaurant_dishes_margin.xlsx');
+                      }
+                      
+                      onAddSystemLog('Simulation Cockpit', '切换行业底座', `切换至行业: ${ind}`, 'info');
+                    }}
+                    className="bg-slate-900 border border-slate-800 text-slate-200 text-[11px] font-bold p-1.5 rounded-lg focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  >
+                    <option value="fashion_wholesale">👕 服装设计批发 (Fashion Wholesale)</option>
+                    <option value="restaurant_takeout">🍔 餐馆外卖 (Restaurant Takeout)</option>
+                    <option value="general_merch_electronics">🧩 普通百货与电器 (General Merch)</option>
+                    <option value="beauty_booking">💄 美业预约 (Beauty Booking)</option>
+                  </select>
+                </div>
+
+                {/* Simulated Playbook Dropdown */}
+                <div className="flex flex-col gap-1 items-start">
+                  <span className="text-[10px] text-slate-400 font-bold">运行Playbook (Playbook):</span>
+                  <select
+                    value={selectedPlaybookId}
+                    onChange={(e) => {
+                      setSelectedPlaybookId(e.target.value);
+                      onAddSystemLog('Simulation Cockpit', '载入Playbook', `已载入方案: ${e.target.value}`, 'info');
+                    }}
+                    className="bg-slate-900 border border-slate-800 text-slate-200 text-[11px] font-bold p-1.5 rounded-lg focus:outline-none focus:border-indigo-500 cursor-pointer min-w-[150px]"
+                  >
+                    {selectedSimIndustry === 'fashion_wholesale' && (
+                      <>
+                        <option value="seasonal_clearance">❄️ 季末库存清理计划</option>
+                        <option value="size_mix_optimization">📏 尺码异动结构优化</option>
+                      </>
+                    )}
+                    {selectedSimIndustry === 'restaurant_takeout' && (
+                      <>
+                        <option value="increase_aov_with_meal_bundles">🍱 畅销三合一套餐提客单</option>
+                        <option value="improve_repurchase_rate">📈 72h新老客回春复购计划</option>
+                      </>
+                    )}
+                    {selectedSimIndustry === 'general_merch_electronics' && (
+                      <>
+                        <option value="high_value_risk_control">🛡️ 高价电器BIN支付网关风控</option>
+                        <option value="major_sale_pricing">🏷️ 大促定价博弈配置</option>
+                      </>
+                    )}
+                    {selectedSimIndustry === 'beauty_booking' && (
+                      <>
+                        <option value="treatment_renewal">💄 疗程续签关怀留存</option>
+                        <option value="no_show_reduction">🕒 爽约拦截与预付保证金</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Stage Grid Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-xs select-none">
+              
+              {/* Target Objectives card inputs */}
+              <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-800 space-y-4 text-left">
+                <h4 className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
+                  <span>1. 设定经营期望上限 (Metrics Targets)</span>
+                </h4>
+
+                <div className="space-y-3.5">
+                  <div>
+                    <div className="flex justify-between items-center text-slate-400 font-bold text-[11px] mb-1">
+                      <span>期盼 GMV 跃升率 (%):</span>
+                      <span className="text-indigo-400 font-bold">+{ (businessGoal.metricsTarget.gmvChangeRate * 100).toFixed(0) }%</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <input 
+                        type="range" min="0" max="100" step="1"
+                        value={ (businessGoal.metricsTarget.gmvChangeRate * 100) }
+                        onChange={(e) => setBusinessGoal({
+                          ...businessGoal,
+                          metricsTarget: { ...businessGoal.metricsTarget, gmvChangeRate: Number(e.target.value) / 100 }
+                        })}
+                        className="flex-1 accent-indigo-500 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center text-slate-400 font-bold text-[11px] mb-1">
+                      <span>可容忍降折促销毛利回吐比极限 (%):</span>
+                      <span className="text-red-400 font-bold">-{ Math.abs(businessGoal.metricsTarget.marginChangeRate * 100).toFixed(0) }%</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <input 
+                        type="range" min="-30" max="0" step="1"
+                        value={ Math.ceil(businessGoal.metricsTarget.marginChangeRate * 100) }
+                        onChange={(e) => setBusinessGoal({
+                          ...businessGoal,
+                          metricsTarget: { ...businessGoal.metricsTarget, marginChangeRate: Number(e.target.value) / 100 }
+                        })}
+                        className="flex-1 accent-red-500 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center text-slate-400 font-bold text-[11px] mb-1">
+                      <span>目标周转天数上限 (Inventory Max Turnover):</span>
+                      <span className="text-amber-400 font-bold">{ businessGoal.metricsTarget.inventoryTurnoverDaysMax } 天内</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <input 
+                        type="range" min="10" max="90" step="5"
+                        value={ businessGoal.metricsTarget.inventoryTurnoverDaysMax }
+                        onChange={(e) => setBusinessGoal({
+                          ...businessGoal,
+                          metricsTarget: { ...businessGoal.metricsTarget, inventoryTurnoverDaysMax: Number(e.target.value) }
+                        })}
+                        className="flex-1 accent-amber-500 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center text-slate-400 font-bold text-[11px] mb-1">
+                      <span>最大退款纠纷允许率 (Refund Rate Cap):</span>
+                      <span className="text-emerald-400 font-bold">&lt;= { (businessGoal.metricsTarget.refundRateMax * 100).toFixed(1) }%</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <input 
+                        type="range" min="1" max="10" step="0.5"
+                        value={ (businessGoal.metricsTarget.refundRateMax * 100) }
+                        onChange={(e) => setBusinessGoal({
+                          ...businessGoal,
+                          metricsTarget: { ...businessGoal.metricsTarget, refundRateMax: Number(e.target.value) / 100 }
+                        })}
+                        className="flex-1 accent-emerald-500 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <p className="text-[10px] text-slate-500 font-medium leading-normal bg-slate-900/50 p-2.5 rounded-lg border border-slate-850">
+                    💡 目标值是判定仿真方案是否可合理收敛的边界规程。如果 GMV 期望过高、利润保护太严、风控限制过窄，博弈可能产生逻辑偏离或无法达成帕累托最优状态。
+                  </p>
+                </div>
+              </div>
+
+              {/* Interactive priority weights selection */}
+              <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-800 space-y-4 text-left font-sans">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
+                    <span>2. 分配高维度控制权重 (Objective Priority Allocations)</span>
+                  </h4>
+                  <span className="font-mono text-xs text-indigo-400 font-black">
+                    { businessGoal.priorityWeights.gmv + businessGoal.priorityWeights.margin + businessGoal.priorityWeights.inventoryHealth + businessGoal.priorityWeights.risk }%
+                  </span>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center text-[11.5px] font-bold text-slate-300">
+                      <span>📈 GMV 流速优先权重:</span>
+                      <span className="font-mono text-indigo-300 font-black">{ businessGoal.priorityWeights.gmv }%</span>
+                    </div>
+                    <input 
+                      type="range" min="0" max="100" step="5"
+                      value={businessGoal.priorityWeights.gmv}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setBusinessGoal({
+                          ...businessGoal,
+                          priorityWeights: { ...businessGoal.priorityWeights, gmv: val }
+                        });
+                      }}
+                      className="w-full accent-indigo-500 mt-1 cursor-pointer"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center text-[11.5px] font-bold text-slate-300">
+                      <span>💰 利润率保护权重:</span>
+                      <span className="font-mono text-red-300 font-black">{ businessGoal.priorityWeights.margin }%</span>
+                    </div>
+                    <input 
+                      type="range" min="0" max="100" step="5"
+                      value={businessGoal.priorityWeights.margin}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setBusinessGoal({
+                          ...businessGoal,
+                          priorityWeights: { ...businessGoal.priorityWeights, margin: val }
+                        });
+                      }}
+                      className="w-full accent-red-500 mt-1 cursor-pointer"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center text-[11.5px] font-bold text-slate-300">
+                      <span>🏭 库存周转及仓损消除权重:</span>
+                      <span className="font-mono text-amber-300 font-black">{ businessGoal.priorityWeights.inventoryHealth }%</span>
+                    </div>
+                    <input 
+                      type="range" min="0" max="100" step="5"
+                      value={businessGoal.priorityWeights.inventoryHealth}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setBusinessGoal({
+                          ...businessGoal,
+                          priorityWeights: { ...businessGoal.priorityWeights, inventoryHealth: val }
+                        });
+                      }}
+                      className="w-full accent-amber-500 mt-1 cursor-pointer"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center text-[11.5px] font-bold text-slate-300">
+                      <span>🛡️ 反欺诈与套汇风控拦截权重:</span>
+                      <span className="font-mono text-emerald-300 font-black">{ businessGoal.priorityWeights.risk }%</span>
+                    </div>
+                    <input 
+                      type="range" min="0" max="100" step="5"
+                      value={businessGoal.priorityWeights.risk}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setBusinessGoal({
+                          ...businessGoal,
+                          priorityWeights: { ...businessGoal.priorityWeights, risk: val }
+                        });
+                      }}
+                      className="w-full accent-emerald-500 mt-1 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Self-balancing status visualizer */}
+                <div className="pt-2 space-y-1.5 font-sans">
+                  <div className="flex h-2 w-full rounded-full overflow-hidden bg-slate-800">
+                    <div style={{ width: `${businessGoal.priorityWeights.gmv}%` }} className="bg-indigo-500 transition-all duration-300"></div>
+                    <div style={{ width: `${businessGoal.priorityWeights.margin}%` }} className="bg-red-500 transition-all duration-300"></div>
+                    <div style={{ width: `${businessGoal.priorityWeights.inventoryHealth}%` }} className="bg-amber-500 transition-all duration-300"></div>
+                    <div style={{ width: `${businessGoal.priorityWeights.risk}%` }} className="bg-emerald-500 transition-all duration-300"></div>
+                  </div>
+                  
+                  {businessGoal.priorityWeights.gmv + businessGoal.priorityWeights.margin + businessGoal.priorityWeights.inventoryHealth + businessGoal.priorityWeights.risk === 100 ? (
+                    <p className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 justify-center bg-emerald-500/10 py-1.5 rounded-md border border-emerald-500/20">
+                      <span>✓ 权重占比完全均衡 (系数和相加正好为 100%)</span>
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-amber-300 font-semibold flex items-center gap-1 justify-center bg-amber-500/10 py-1.5 rounded-md border border-amber-500/20">
+                      <span>⚠️ 权重占比合计为 {businessGoal.priorityWeights.gmv + businessGoal.priorityWeights.margin + businessGoal.priorityWeights.inventoryHealth + businessGoal.priorityWeights.risk}% (博弈底盘将自动缩放系数运行)</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Multi-modal RAG File Context Upload Sandzone */}
+              <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-800 space-y-4 text-left flex flex-col justify-between h-full font-sans">
+                <div className="space-y-3.5">
+                  <h4 className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                    <span>3. 多模态语境感知输入 (Knowledge & Assets Feeding)</span>
+                  </h4>
+
+                  <div className="space-y-2">
+                    {uploadedModalFiles.map((file, fidx) => (
+                      <button
+                        key={fidx}
+                        type="button"
+                        onClick={() => {
+                          setSelectedModalFile(file.name);
+                          onAddSystemLog('Simulation Cockpit', '审查多模态输入文件', `调阅 ${file.name} 账期数据并抓取核心信息。`, 'info');
+                        }}
+                        className={`w-full text-left p-2.5 rounded-xl border transition-all flex items-center justify-between cursor-pointer ${selectedModalFile === file.name ? 'bg-indigo-600/20 border-indigo-500/80 text-white shadow-sm' : 'bg-slate-900/60 border-slate-800 hover:border-slate-750 text-slate-400'}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {file.type === 'Spreadsheet' ? (
+                            <Database className="w-4 h-4 text-emerald-450" />
+                          ) : (
+                            <Globe className="w-4 h-4 text-indigo-405" />
+                          )}
+                          <div>
+                            <p className="text-[11px] font-bold">{file.name}</p>
+                            <p className="text-[9px] text-slate-500 font-mono font-bold mt-0.5">{file.type} • {file.size}</p>
+                          </div>
+                        </div>
+                        <span className={`text-[9px] px-1.5 py-0.5 font-mono rounded font-bold leading-none ${selectedModalFile === file.name ? 'bg-indigo-500/30 text-indigo-300' : 'bg-slate-950 text-slate-500'}`}>
+                          {selectedModalFile === file.name ? '已注入' : '待命'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-800/80 space-y-3">
+                  {/* Drop zone visualizer preview content */}
+                  {selectedModalFile && (
+                    <div className="p-3 bg-slate-950 rounded-xl border border-slate-805 text-[10.5px] leading-relaxed text-slate-400 font-mono select-text">
+                      <p className="font-extrabold text-slate-300 text-[11px] mb-1.5 flex items-center gap-1.5 border-b border-slate-900 pb-1">
+                        <span>📄 【{selectedModalFile}】哈希载荷透视:</span>
+                      </p>
+                      {selectedModalFile.includes('aging') ? (
+                        <p className="leading-relaxed text-slate-400">
+                          - 积压大宗：阿尔卑斯重防外套、轻暖马甲。<br />
+                          - 静态周转：高达 120 天出库停滞。<br />
+                          - 持存仓损：日费量级积压累积 $2.5/件。
+                        </p>
+                      ) : (
+                        <p className="leading-relaxed text-slate-400">
+                          - 气象异常：瑞士/德国南部气温大幅回暖偏高 3.2°C。<br />
+                          - WMS警戒：防寒服欧洲消费意愿下跌位 62%。
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsUploadingFile(true);
+                      setTimeout(() => {
+                        const newF = { name: 'spring_new_products_specs.xlsx', type: 'Spreadsheet', size: '94 KB' };
+                        setUploadedModalFiles(prev => [...prev, newF]);
+                        setSelectedModalFile(newF.name);
+                        setIsUploadingFile(false);
+                        onAddSystemLog('Simulation Cockpit', '多模态上传', '自动抓取春季新品仓配数据并注入认知层', 'success');
+                      }, 1000);
+                    }}
+                    disabled={isUploadingFile}
+                    className="w-full text-center py-2 border border-dashed border-indigo-500/30 hover:border-indigo-500 rounded-xl bg-indigo-500/5 text-[#9F7AEA] hover:text-white font-extrabold transition-all cursor-pointer text-[10px]"
+                  >
+                    {isUploadingFile ? '📁 正在分析上传资产的语义序列...' : '➕ 拖曳/上传多模态辅助大账目报表 / Weather Anomaly Map'}
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Launch Simulation Trigger Dashboard Block */}
+            <div className="bg-slate-950 rounded-2xl p-5 border border-slate-800/80 relative flex flex-col items-center justify-center min-h-[140px] text-center select-none overflow-hidden font-sans">
+              {cockpitPhase === 'idle' && (
+                <div className="space-y-4 max-w-lg">
+                  <div className="space-y-1">
+                    <p className="text-white font-black text-sm flex items-center justify-center gap-1.5">
+                      <span>🔮 双战役级协同规划引擎已就位</span>
+                    </p>
+                    <p className="text-xs text-slate-400 leading-relaxed font-semibold">
+                      点击下方深紫色按钮。系统将瞬间激活 5 大专家级决策智能体，严格按照配置的 GMV、利润、周转速度和防套汇风控权重，多方博弈寻找利润阻损的纳什平衡点。
+                    </p>
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={handleLaunchMockSimulation}
+                    className="bg-indigo-600 hover:bg-indigo-550 active:scale-98 text-white font-black text-xs px-8 py-3 rounded-xl transition-all shadow-lg shadow-indigo-650/20 tracking-wider flex items-center gap-2 cursor-pointer border border-indigo-500"
+                  >
+                    <Sliders className="w-4 h-4 text-white animate-spin" />
+                    <span>🔮 启动多智能体多任务协同博弈仿真 (Goal-Driven Dynamic Simulation)</span>
+                  </button>
+                </div>
+              )}
+
+              {cockpitPhase === 'simulating' && (
+                <div className="w-full space-y-4 max-w-2xl py-2 font-mono">
+                  <div className="flex items-center justify-between text-slate-300 text-[11px] font-mono border-b border-indigo-950/80 pb-2 mb-2">
+                    <span className="flex items-center gap-1.5 font-bold">
+                      <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+                      <span>多部门合规决策智库圆桌辩论大博弈中...</span>
+                    </span>
+                    <span className="font-extrabold text-[#9F7AEA]">Nash Equilibrium Iterative Calculation</span>
+                  </div>
+
+                  <div className="w-full bg-slate-900 rounded-lg h-1.5 overflow-hidden border border-slate-800">
+                    <div 
+                      style={{ width: `${(currentSimulationIndex + 1) * 20}%` }}
+                      className="bg-indigo-500 h-full rounded-full transition-all duration-300 shadow-md shadow-indigo-600"
+                    ></div>
+                  </div>
+
+                  <p className="text-xs text-slate-400 font-medium tracking-wide">
+                    已搜集对公 WMS 保税出库单, 发言博弈进行到第 <span className="text-indigo-400 font-bold font-mono">{currentSimulationIndex + 1} / 5</span> 轮次专家听证...
+                  </p>
+                </div>
+              )}
+
+              {cockpitPhase === 'done' && (
+                <div className="w-full space-y-6 text-left">
+                  <div className="flex flex-wrap items-center justify-between border-b border-indigo-900/50 pb-2.5 flex-wrap">
+                    <div className="space-y-0.5">
+                      <p className="text-emerald-400 font-black text-[13px] flex items-center gap-1.5">
+                        <Check className="w-4 h-4 text-emerald-400" />
+                        <span>多智能体协同对账博弈收敛达成平衡！</span>
+                      </p>
+                      <p className="text-[10px] text-slate-450 font-medium font-sans">经营目标与财务、供应链、反羊毛安全防护已在此方案中达成经典帕累托最优收敛。</p>
+                    </div>
+                    
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCockpitPhase('idle');
+                        setSimulationRoundtable([]);
+                      }}
+                      className="text-slate-400 hover:text-white border border-slate-800 px-3 py-1 text-[10px] rounded-lg cursor-pointer"
+                    >
+                      重新设定
+                    </button>
+                  </div>
+
+                  {/* Metrics and Tradeoffs grid comparison */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-950/80 p-4.5 rounded-xl border border-indigo-950/60 shadow-inner select-text">
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-slate-400 font-extrabold uppercase">GMV 调控溢价预期 (Target: +{businessGoal.metricsTarget.gmvChangeRate * 100}%)</p>
+                      <p className="text-base text-indigo-400 font-black font-mono tracking-tight">{simulationResults?.metricsDelta.gmv}</p>
+                      <p className="text-[10px] text-indigo-300 font-bold leading-none bg-indigo-500/10 px-1 py-0.5 rounded border border-indigo-500/10 inline-block mt-1">全栈降折策略 -35% 挂载</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-slate-400 font-extrabold uppercase">预计毛利率浮动 (Target: -{Math.abs(businessGoal.metricsTarget.marginChangeRate * 100)}%)</p>
+                      <p className="text-base text-rose-400 font-black font-mono tracking-tight">{simulationResults?.metricsDelta.margin}</p>
+                      <p className="text-[10px] text-rose-300 font-bold leading-none bg-rose-500/10 px-1 py-0.5 rounded border border-rose-500/10 inline-block mt-1">小利换高流速: 盘活货舱资金</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-slate-400 font-extrabold uppercase">WMS 冬储周转天数 (Target: &lt;= {businessGoal.metricsTarget.inventoryTurnoverDaysMax}天)</p>
+                      <p className="text-base text-amber-400 font-black font-mono tracking-tight">{simulationResults?.metricsDelta.turnover}</p>
+                      <p className="text-[10px] text-amber-300 font-bold leading-none bg-amber-500/10 px-1 py-0.5 rounded border border-amber-500/10 inline-block mt-1">封堵并终止本季意向采购</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-slate-400 font-extrabold uppercase">纠纷欺诈最高红线 (Target: &lt;= {(businessGoal.metricsTarget.refundRateMax * 100).toFixed(1)}%)</p>
+                      <p className="text-base text-emerald-400 font-black font-mono tracking-tight">{simulationResults?.metricsDelta.risk}</p>
+                      <p className="text-[10px] text-emerald-300 font-bold leading-none bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/10 inline-block mt-1">最严信用卡大批量套网阻断</p>
+                    </div>
+                  </div>
+
+                  {/* Propositions listed and deploy buttons */}
+                  <div className="space-y-4 font-sans">
+                    <div className="space-y-2">
+                      <p className="text-[11px] text-slate-300 font-black uppercase tracking-widest">📋 智能体团队联合编译的 4 大商业行动提案: </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11.5px] text-slate-300 bg-slate-900/60 p-4 rounded-xl border border-slate-800 font-sans select-text">
+                        {simulationResults?.propositions.map((pText, pIdx) => (
+                          <div key={pIdx} className="flex gap-2 items-start font-semibold leading-relaxed">
+                            <span className="text-indigo-400 font-mono text-xs font-black">0{pIdx + 1}.</span>
+                            <span className="text-slate-200">{pText}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 justify-end pt-2 flex-wrap">
+                      {isSimPlanDeployed ? (
+                        <div className="bg-emerald-500/15 border border-emerald-500/30 rounded-xl px-5 py-3 text-emerald-400 text-xs font-black flex items-center gap-1.5 w-full justify-between animate-fadeIn select-text leading-relaxed">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>🚀 4 项博弈调节指令部署成功！全网租户前台定价、规则和 WMS 联动采购任务已注入就绪！</span>
+                          </div>
+                          <span className="text-slate-400 font-mono">STATUS: SYSTEM_LIVE_DEPLOYED</span>
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onAddSystemLog('Simulation Cockpit', '打回协同方案', '管理员驳回方案，重置博弈环境。', 'warning');
+                              setCockpitPhase('idle');
+                              setSimulationRoundtable([]);
+                            }}
+                            className="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 font-extrabold text-[11px] px-5 py-2.5 rounded-xl transition-colors cursor-pointer"
+                          >
+                            ✖ 驳回此圆桌博弈，手工改重
+                          </button>
+                          
+                          <button
+                            type="button"
+                            onClick={executeSimulationPlanDeploy}
+                            className="bg-emerald-600 hover:bg-emerald-550 border border-emerald-500 hover:scale-[1.01] active:scale-99 text-white font-black text-xs px-8 py-3.5 rounded-xl transition-all shadow-md shadow-emerald-700/10 flex items-center gap-2 cursor-pointer"
+                          >
+                            <Play className="w-3.5 h-3.5 fill-current" />
+                            <span>🚀 一键物理发布，并部署此协同博弈动作至全网租户店内</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Simulated Live Roundtable Dialgues in Terminal-like feed area */}
+            {simulationRoundtable.length > 0 && (
+              <div className="bg-slate-950 border border-slate-850 rounded-2xl p-5 space-y-4 shadow-inner text-left font-sans">
+                <div className="flex items-center justify-between border-b border-slate-900 pb-2">
+                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-1 font-sans">
+                    <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
+                    <span>🧠 多智能体协同决策博弈圆桌会议实时流 (Decentralized Intelligence Roundtable Live Feed)</span>
+                  </span>
+                  <span className="font-mono text-[9px] text-[#9F7AEA] font-bold">STATE: COGNITIVE_ROUNDTABLE_LOOP</span>
+                </div>
+
+                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1 customize-scrollbar font-sans select-none">
+                  {simulationRoundtable.map((step, sIdx) => {
+                    let agentBorder = "border-slate-850 bg-slate-900/40";
+                    let agentTag = "bg-indigo-600 text-indigo-100";
+                    if (step.agent === 'pricing') {
+                      agentBorder = "border-red-950/40 bg-red-955/5";
+                      agentTag = "bg-red-650 text-red-100";
+                    } else if (step.agent === 'inventory') {
+                      agentBorder = "border-amber-950/40 bg-amber-955/5";
+                      agentTag = "bg-amber-650 text-amber-900";
+                    } else if (step.agent === 'marketing') {
+                      agentBorder = "border-indigo-900/20 bg-indigo-950/5";
+                      agentTag = "bg-indigo-600 text-indigo-100";
+                    } else if (step.agent === 'risk') {
+                      agentBorder = "border-emerald-950/40 bg-emerald-955/5";
+                      agentTag = "bg-emerald-650 text-emerald-900";
+                    }
+
+                    return (
+                      <div 
+                        key={sIdx} 
+                        className={`p-3.5 rounded-xl border ${agentBorder} flex gap-3 text-xs leading-relaxed transition-all animate-fadeIn text-left`}
+                      >
+                        <div className="w-9 h-9 rounded-full bg-slate-900/80 border border-slate-850 flex items-center justify-center shrink-0 shadow text-base">
+                          {step.avatar}
+                        </div>
+                        <div className="space-y-1 my-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-slate-100">{step.name}</span>
+                            <span className={`text-[9px] px-1.5 py-0.5 font-sans rounded leading-none font-bold ${agentTag}`}>
+                              {step.role}
+                            </span>
+                          </div>
+                          
+                          <p className="text-slate-300 font-medium select-text font-sans mt-1">
+                            {step.opinion}
+                          </p>
+                          
+                          <div className="pt-2 select-text">
+                            <span className="text-[10px] text-slate-400 bg-slate-900/85 px-2.5 py-1 rounded inline-block border border-slate-800 font-mono font-semibold leading-relaxed">
+                              ⚖️ 【博弈与调控增益】 {step.tradeoffs}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 8 Operational Subtabs Row */}
@@ -1916,6 +3879,68 @@ export default function SuperAdminCenter({
 
           </div>
         </div>
+      )}
+
+      {/* SUBTAB: DEVELOPER BLUEPRINTS CENTER - 👨‍💻 开发者中心 */}
+      {activeSubTab === 'dev' && (
+        <EpicBlueprints 
+          onSwitchToSimulation={(industry, playbookId) => {
+            // 1. Switch activeSubTab to 'ai-ops'
+            if (onChangeSubTab) {
+              onChangeSubTab('ai-ops');
+            }
+            // 2. Select industry and playbook
+            setSelectedSimIndustry(industry);
+            setSelectedPlaybookId(playbookId);
+            // 3. Populate preset values so the Sandbox is instantly ready to run!
+            if (industry === 'fashion_wholesale') {
+              setActivePresetCampaign('winter_clearout');
+              setBusinessGoal({
+                timeRange: { preset: 'next_month', from: '', to: '' },
+                metricsTarget: {
+                  gmvChangeRate: 0.25,
+                  ordersChangeRate: 0.18,
+                  marginChangeRate: -0.05,
+                  refundRateMax: 0.03,
+                  inventoryTurnoverDaysMax: 35
+                },
+                priorityWeights: {
+                  gmv: 30,
+                  margin: 20,
+                  inventoryHealth: 40,
+                  retention: 5,
+                  risk: 5
+                }
+              });
+              setSelectedModalFile('winter_aging_analysis.xlsx');
+            } else if (industry === 'restaurant_takeout') {
+              setActivePresetCampaign('none');
+              setBusinessGoal({
+                timeRange: { preset: 'next_month', from: '', to: '' },
+                metricsTarget: {
+                  gmvChangeRate: 0.18,
+                  ordersChangeRate: 0.12,
+                  marginChangeRate: -0.04,
+                  refundRateMax: 0.015,
+                  inventoryTurnoverDaysMax: 3
+                },
+                priorityWeights: {
+                  gmv: 25,
+                  margin: 20,
+                  inventoryHealth: 10,
+                  retention: 35,
+                  risk: 10
+                }
+              });
+              setSelectedModalFile('restaurant_dishes_margin.xlsx');
+            }
+            setCockpitPhase('idle');
+            setSimulationResults(null);
+            setSimulationRoundtable([]);
+            onAddSystemLog('Developer Center', 'Epic 跳转', `已从开发者 Epic 中心加载「${industry === 'fashion_wholesale' ? '服装积货清仓' : '外卖客单复购'}」仿真上下文`, 'success');
+          }}
+          onAddSystemLog={onAddSystemLog}
+        />
       )}
 
       {/* SUBTAB 8: ROLES PERMISSIONS CENTER - 🔐 权限中心 */}

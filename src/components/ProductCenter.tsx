@@ -116,6 +116,14 @@ export default function ProductCenter({ products, selectedIndustry, addLog, onUp
   // Modals controller states
   const [showProductModal, setShowProductModal] = useState<'create' | 'edit' | null>(null);
   const [editingProduct, setEditingProduct] = useState<Partial<ProductItem>>({});
+
+  // Track active productId in context
+  React.useEffect(() => {
+    const activeId = editingProduct?.id || selectedProductIds[0] || (products[0]?.id || undefined);
+    if (typeof window !== 'undefined' && window.AIContextTracker) {
+      window.AIContextTracker.setProductId(activeId);
+    }
+  }, [editingProduct?.id, selectedProductIds, products]);
   const [showProcurementModal, setShowProcurementModal] = useState(false);
   const [isBulkProcurement, setIsBulkProcurement] = useState(false);
   const [newPO, setNewPO] = useState({

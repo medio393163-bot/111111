@@ -68,6 +68,14 @@ export default function OrderCenter({
   const [activeSubTab, setActiveSubTab] = useState<'all' | 'unshipped' | 'refunds' | 'tracking'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<EnrichedOrder | null>(null);
+
+  // Track active orderId in context
+  React.useEffect(() => {
+    const activeId = selectedOrder?.id || (orders[0]?.id || undefined);
+    if (typeof window !== 'undefined' && window.AIContextTracker) {
+      window.AIContextTracker.setOrderId(activeId);
+    }
+  }, [selectedOrder?.id, orders]);
   const [showDispatchModal, setShowDispatchModal] = useState<EnrichedOrder | null>(null);
   const [showRefundModal, setShowRefundModal] = useState<EnrichedOrder | null>(null);
   const [showRiskModal, setShowRiskModal] = useState<EnrichedOrder | null>(null);

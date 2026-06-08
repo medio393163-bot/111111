@@ -2,7 +2,19 @@
  * AI Commerce OS - Data Types
  */
 
-export type IndustryType = 'retail' | 'food' | 'education' | 'healthcare' | 'service' | 'manufacturing';
+export type IndustryType = 
+  | 'retail' 
+  | 'food' 
+  | 'education' 
+  | 'healthcare' 
+  | 'service' 
+  | 'manufacturing'
+  | 'fashion_wholesale' 
+  | 'restaurant_takeout' 
+  | 'general_merch_electronics' 
+  | 'beauty_booking' 
+  | 'ecommerce_store' 
+  | 'pos_retail';
 
 export interface TenantConfig {
   id: string;
@@ -43,6 +55,9 @@ export interface OrderItem {
   status: 'Pending' | 'AI Confirmed' | 'Shipped' | 'Refund Requested' | 'Refunded' | 'Completed' | 'Cancelled';
   createdAt: string;
   riskScore: number; // 0 to 100 calculated by AI
+  shippingAddress?: string;
+  paymentMethod?: string;
+  items?: { productId?: string; sku?: string; name: string; price: number; quantity?: number; qty?: number }[];
 }
 
 export interface AIEmployee {
@@ -194,5 +209,10 @@ export interface PlatformGlobalAiConfig {
   currentTokensUsed: number;
   unauthorizedBlockText: string;
 }
+
+import { AIContext } from './types/AIContext';
+export type { AIContext };
+
+
 
 

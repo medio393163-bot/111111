@@ -48,7 +48,7 @@ import {
   Truck,
   Mail
 } from 'lucide-react';
-import { IndustryType, TenantConfig, ProductItem, OrderItem, AIEmployee, Workflow, WorkflowNode, KnowledgeDoc, McpTool, AppMarketItem, CollaborationLog, SourcingRecommendation, CustomerItem } from './types';
+import { IndustryType, TenantConfig, ProductItem, OrderItem, AIEmployee, Workflow, WorkflowNode, KnowledgeDoc, McpTool, AppMarketItem, CollaborationLog, SourcingRecommendation, CustomerItem, AIContext } from './types';
 import { INDUSTRY_PRESETS, COMMON_MCP_TOOLS, APP_MARK_PRESETS, PLATFORM_STATS } from './data';
 import { DOCTREE_DATA, DocTreeNode } from './doctreeData';
 import DocTreeViewer from './components/DocTreeViewer';
@@ -75,6 +75,15 @@ import EnterpriseSettings from './components/EnterpriseSettings';
 import ShopifyDocsFinder from './components/ShopifyDocsFinder';
 import PoliciesManagement from './components/PoliciesManagement';
 import SuperAdminCenter from './components/SuperAdminCenter';
+import { 
+  runtimeContextManager, 
+  mapIndustry, 
+  mapPage, 
+  getCountryForIndustry, 
+  getTenantInfo,
+  ReactAIContextProvider
+} from './context/AIContextProvider';
+import { aiRuntimeStore } from './store/aiRuntimeStore';
 
 export default function App() {
   // Active states
@@ -209,6 +218,61 @@ export default function App() {
     };
     checkHealth();
   }, []);
+
+  // --- AI Runtime Context Engine Automatic Synchronization ---
+  useEffect(() => {
+    const mappedInd = mapIndustry(selectedIndustry);
+    const tenantDetails = getTenantInfo(selectedIndustry);
+    const currentStoreCtx = aiRuntimeStore.getContext();
+    const productId = currentStoreCtx.ui?.productId;
+    const orderId = currentStoreCtx.ui?.orderId;
+    const customerId = currentStoreCtx.ui?.customerId;
+
+    const mappedPg = mapPage(activeTab, { productId, orderId, customerId });
+    const country = getCountryForIndustry(mappedInd);
+    
+    const patch: AIContext = {
+      shop: {
+        tenantId: tenantDetails.tenantId,
+        shopId: tenantDetails.storeId,
+        shopDomain: 'mystore.myshopify.com',
+        shopName: 'AI OS Premium Boutique',
+        country: country,
+        currency: 'EUR',
+        primaryLocale: 'it-IT',
+        industry: mappedInd,
+        lifecycleStage: 'growing',
+        onlineStoreEnabled: true,
+        posEnabled: true
+      },
+      user: {
+        userId: 'u_admin',
+        role: 'owner',
+        permissions: ['products.read', 'orders.read', 'finance.read', 'analytics.read'],
+        language: 'zh-CN'
+      },
+      ui: {
+        pageType: mappedPg,
+        productId: mappedPg === 'product_detail' ? productId : undefined,
+        orderId: mappedPg === 'order_detail' ? orderId : undefined,
+        customerId: mappedPg === 'customer_detail' ? customerId : undefined
+      },
+      metrics: {
+        timeRange: 'today',
+        totalSalesToday: 1240,
+        ordersCountToday: 8,
+        totalSalesThisMonth: 18450,
+        profitThisMonth: 7750,
+        lowStockCount: 3,
+        churnedCustomersCount: 14,
+        paymentSuccessRate: 98.4,
+        refundRate: 2.1,
+        activeAIStaffCount: 4
+      }
+    };
+
+    aiRuntimeStore.setContext(patch);
+  }, [selectedIndustry, activeTab]);
 
   const addLog = (agent: string, action: string, details: string, type: 'info' | 'success' | 'warning' | 'error' | 'tool' = 'info') => {
     const time = new Date().toTimeString().split(' ')[0];
@@ -1169,12 +1233,18 @@ export default function App() {
 
   if (viewMode === 'provisioning') {
     const industryLabels: Record<IndustryType, string> = {
-      retail: '服装设计批发系统',
-      food: '餐馆外卖系统',
-      manufacturing: '百货电器系统',
-      service: '美容预约系统',
-      education: '电商网店系统',
-      healthcare: 'POS门店系统'
+      retail: '新零售门店',
+      food: '餐饮服务',
+      manufacturing: '制造加工',
+      service: '生活服务',
+      education: '在线教育',
+      healthcare: '医疗健康',
+      fashion_wholesale: '服装设计批发系统',
+      restaurant_takeout: '餐馆外卖系统',
+      general_merch_electronics: '百货电器系统',
+      beauty_booking: '美容预约系统',
+      ecommerce_store: '电商网店系统',
+      pos_retail: 'POS门店系统'
     };
     return (
       <ProvisioningPage 
@@ -1371,6 +1441,30 @@ export default function App() {
         {/* Bottom Menu: Document Sync & Settings */}
         <div id="sidebar-bottom" className="p-2 border-t border-[#2d2e30] bg-[#121314]/90 space-y-1 font-sans">
           
+          {/* Prominent, persistent AI Commander toggle widget inside left sidebar */}
+          {adminMode === 'merchant' && (
+            <button 
+              id="sidebar-ai-commander-btn"
+              type="button"
+              onClick={() => {
+                setIsCommandCenterOpen(!isCommandCenterOpen);
+                addLog('AI Command Center', 'AI Commander Toggle', `${isCommandCenterOpen ? '收起' : '展开'} AI Commander 商务操作系统控制台。`, 'info');
+              }}
+              className={`w-full text-left p-2.5 mb-2 rounded-xl flex items-center justify-between text-xs font-black bg-gradient-to-r from-slate-900 via-[#1b1c1e] to-slate-950 border ${
+                isCommandCenterOpen ? 'border-[#07C2E3] text-[#07C2E3] shadow-[0_0_12px_rgba(7,194,227,0.15)]' : 'border-indigo-900/60 text-indigo-300'
+              } hover:border-[#07C2E3] hover:text-[#07C2E3] transition-all cursor-pointer`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm">🧠</span>
+                <span className="font-sans font-extrabold uppercase tracking-wider">AI Commander</span>
+              </div>
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#07C2E3] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#07C2E3]"></span>
+              </span>
+            </button>
+          )}
+
           <button 
             onClick={() => {
               const newMode = adminMode === 'super_admin' ? 'merchant' : 'super_admin';
@@ -1547,6 +1641,26 @@ export default function App() {
                 globalDefaultModel={globalDefaultModel}
                 onChangeGlobalModel={(model) => {
                   setGlobalDefaultModel(model);
+                }}
+                onChangeSubTab={(subTab) => {
+                  const tabMapping: Record<string, string> = {
+                    'stats': 'admin_stats',
+                    'tenants': 'admin_tenants',
+                    'billing': 'admin_plans',
+                    'settlement': 'admin_settle',
+                    'gateways': 'admin_gateways',
+                    'channels': 'admin_channels',
+                    'ai-ops': 'admin_ai_ops',
+                    'marketplace': 'admin_marketplace',
+                    'dev': 'admin_dev',
+                    'roles': 'admin_roles',
+                    'logs': 'admin_system',
+                    'settings': 'admin_settings'
+                  };
+                  const targetTab = tabMapping[subTab];
+                  if (targetTab) {
+                    setActiveTab(targetTab);
+                  }
                 }}
                 onAddSystemLog={(module, action, details, type) => addLog(`[Admin] ${module}`, action, details, type)} activeAgents={activeAgents} onUpdateAgents={setActiveAgents} />
             ) : tenants.find(t => t.industry === selectedIndustry)?.status === 'suspended' ? (
@@ -2631,6 +2745,7 @@ export default function App() {
             products={currentIndustryData.products}
             orders={currentIndustryData.orders}
             customers={currentIndustryData.customers || []}
+            currentAppTab={activeTab}
             onUpdateCustomers={(updatedCustomers) => {
               setTenantDB(prev => ({
                 ...prev,
@@ -2646,6 +2761,16 @@ export default function App() {
             onBulkRestock={handleBulkRestockComp}
             onUpdateOrderStatus={handleUpdateOrderStatus}
             onAddNewProduct={handleAddNewProductComp}
+            onPrefillProductForm={(name, sku, price, stock) => {
+              setNewTitle(name);
+              setNewSKU(sku);
+              setNewPrice(price);
+              setNewStock(stock);
+              setNewThreshold(10);
+              setActiveTab('products');
+              setShowAddProduct(true);
+              addLog('AI Commander', 'Deep Redirection & Prefill', `已自动将智体提案货品「${name}」填充到商品创建表单并为您跳转，完成闭环！`, 'success');
+            }}
           />
 
         </div>

@@ -82,6 +82,14 @@ export default function CustomerCenter({
 
   // Task 01: Customer view states
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerItem | null>(null);
+
+  // Track active customerId in context
+  React.useEffect(() => {
+    const activeId = selectedCustomer?.id || selectedCustomerIds[0] || (customers[0]?.id || undefined);
+    if (typeof window !== 'undefined' && window.AIContextTracker) {
+      window.AIContextTracker.setCustomerId(activeId);
+    }
+  }, [selectedCustomer?.id, selectedCustomerIds, customers]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTier, setFilterTier] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
